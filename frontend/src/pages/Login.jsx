@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { MessageCircle, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
-import LightRays from '../components/backgrounds/LightRays';
+import Particles from '../components/ui/Particles';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function Login() {
@@ -30,31 +30,29 @@ export default function Login() {
       className="relative overflow-hidden"
       style={{ background: '#07070d', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', maxHeight: '100vh' }}
     >
-      {/* LightRays Background */}
+      {/* Particles Background */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-        <LightRays
-          raysOrigin="top-center"
-          raysColor="#6d28d9"
-          raysSpeed={0.4}
-          lightSpread={1.5}
-          rayLength={2.5}
-          pulsating
-          fadeDistance={1.2}
-          saturation={1.2}
-          followMouse
-          mouseInfluence={0.15}
-          noiseAmount={0.02}
-          distortion={0.1}
+        <Particles
+          particleCount={250}
+          particleSpread={12}
+          speed={0.05}
+          particleColors={['#a78bfa', '#7c3aed', '#6d28d9', '#8b5cf6', '#c084fc']}
+          moveParticlesOnHover={false}
+          alphaParticles={true}
+          particleBaseSize={120}
+          sizeRandomness={1.5}
+          cameraDistance={22}
+          disableRotation={false}
         />
       </div>
 
-      {/* Gradient overlay bottom fade */}
+      {/* Gradient overlay */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           zIndex: 1,
-          background: 'linear-gradient(to bottom, transparent 40%, rgba(7,7,13,0.85) 100%)',
+          background: 'radial-gradient(ellipse at center top, transparent 30%, rgba(7,7,13,0.7) 100%)',
           pointerEvents: 'none',
         }}
       />
@@ -62,25 +60,20 @@ export default function Login() {
       {/* Main Content */}
       <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '440px', margin: '0 auto', padding: '0 20px' }}>
 
-        {/* ── Hero Section ── */}
+        {/* Hero */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          {/* Heading */}
           <h1 style={{ fontSize: 'clamp(2rem, 5vw, 2.8rem)', fontWeight: 700, lineHeight: 1.15, letterSpacing: '-0.02em', margin: '0 0 12px 0' }}>
-            <span style={{ color: '#ffffff' }}>Conecta. </span>
+            <span style={{ color: '#ffffff' }}>GroupsApp </span>
             <span style={{ background: 'linear-gradient(135deg, #a78bfa, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Colabora.
+              Login
             </span>
-            <br />
-            <span style={{ color: '#ffffff' }}>Sin límites.</span>
           </h1>
-
-          {/* Subtitle */}
           <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '15px', lineHeight: 1.5, maxWidth: '340px', margin: '0 auto' }}>
-            Grupos, canales y mensajes en tiempo real con la potencia de AWS. Tu equipo, siempre sincronizado.
+            Mensajería en tiempo real con la potencia de AWS.
           </p>
         </div>
 
-        {/* ── Login Card ── */}
+        {/* Card */}
         <div
           style={{
             borderRadius: '20px',
@@ -119,7 +112,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Error */}
           {error && (
             <Alert
               variant="destructive"
@@ -138,25 +130,14 @@ export default function Login() {
             </Alert>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} noValidate>
-            {/* Email field */}
             <div style={{ marginBottom: '14px' }}>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'rgba(255,255,255,0.55)', marginBottom: '8px' }}>
                 Email
               </label>
               <div style={{ position: 'relative' }}>
                 <Mail
-                  style={{
-                    position: 'absolute',
-                    left: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '16px',
-                    height: '16px',
-                    color: 'rgba(255,255,255,0.2)',
-                    pointerEvents: 'none',
-                  }}
+                  style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', width: '16px', height: '16px', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }}
                 />
                 <input
                   type="email"
@@ -164,46 +145,23 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
                   style={{
-                    width: '100%',
-                    padding: '13px 16px 13px 42px',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px',
-                    color: '#ffffff',
-                    fontSize: '14px',
-                    outline: 'none',
-                    transition: 'border-color 0.2s, box-shadow 0.2s',
-                    boxSizing: 'border-box',
+                    width: '100%', padding: '13px 16px 13px 42px', background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#ffffff',
+                    fontSize: '14px', outline: 'none', transition: 'border-color 0.2s, box-shadow 0.2s', boxSizing: 'border-box',
                   }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = 'rgba(139,92,246,0.5)';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.15)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(255,255,255,0.1)';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  onFocus={(e) => { e.target.style.borderColor = 'rgba(139,92,246,0.5)'; e.target.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.15)'; }}
+                  onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
                 />
               </div>
             </div>
 
-            {/* Password field */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'rgba(255,255,255,0.55)', marginBottom: '8px' }}>
                 Contraseña
               </label>
               <div style={{ position: 'relative' }}>
                 <Lock
-                  style={{
-                    position: 'absolute',
-                    left: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '16px',
-                    height: '16px',
-                    color: 'rgba(255,255,255,0.2)',
-                    pointerEvents: 'none',
-                  }}
+                  style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', width: '16px', height: '16px', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }}
                 />
                 <input
                   type="password"
@@ -211,48 +169,24 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   style={{
-                    width: '100%',
-                    padding: '13px 16px 13px 42px',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px',
-                    color: '#ffffff',
-                    fontSize: '14px',
-                    outline: 'none',
-                    transition: 'border-color 0.2s, box-shadow 0.2s',
-                    boxSizing: 'border-box',
+                    width: '100%', padding: '13px 16px 13px 42px', background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#ffffff',
+                    fontSize: '14px', outline: 'none', transition: 'border-color 0.2s, box-shadow 0.2s', boxSizing: 'border-box',
                   }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = 'rgba(139,92,246,0.5)';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.15)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(255,255,255,0.1)';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  onFocus={(e) => { e.target.style.borderColor = 'rgba(139,92,246,0.5)'; e.target.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.15)'; }}
+                  onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
                 />
               </div>
             </div>
 
-            {/* Submit button */}
             <button
               type="submit"
               disabled={loading}
               style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '14px',
-                background: loading ? 'rgba(124,58,237,0.5)' : '#7c3aed',
-                color: '#ffffff',
-                fontWeight: 600,
-                fontSize: '15px',
-                borderRadius: '12px',
-                border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'background 0.2s, box-shadow 0.2s, transform 0.1s',
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                padding: '14px', background: loading ? 'rgba(124,58,237,0.5)' : '#7c3aed', color: '#ffffff',
+                fontWeight: 600, fontSize: '15px', borderRadius: '12px', border: 'none',
+                cursor: loading ? 'not-allowed' : 'pointer', transition: 'background 0.2s, box-shadow 0.2s, transform 0.1s',
                 boxShadow: '0 8px 24px rgba(124,58,237,0.3)',
               }}
               onMouseEnter={(e) => { if (!loading) e.target.style.background = '#6d28d9'; }}
@@ -261,16 +195,7 @@ export default function Login() {
               onMouseUp={(e) => { e.target.style.transform = 'scale(1)'; }}
             >
               {loading ? (
-                <div
-                  style={{
-                    width: '20px',
-                    height: '20px',
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    borderTopColor: '#fff',
-                    borderRadius: '50%',
-                    animation: 'spin 0.6s linear infinite',
-                  }}
-                />
+                <div style={{ width: '20px', height: '20px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
               ) : (
                 <>
                   Iniciar Sesión
@@ -280,7 +205,6 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Register link */}
           <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', margin: 0 }}>
               ¿No tienes cuenta?{' '}
@@ -291,13 +215,11 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Footer */}
         <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '11px', marginTop: '20px' }}>
           GroupsApp · Sistemas Distribuidos · AWS
         </p>
       </div>
 
-      {/* Spin animation for loader */}
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
