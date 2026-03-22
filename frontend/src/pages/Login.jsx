@@ -15,6 +15,8 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!email.trim()) return setError('Ingresa tu email');
+    if (!password) return setError('Ingresa tu contraseña');
     try {
       await login(email, password);
       navigate('/');
@@ -137,7 +139,7 @@ export default function Login() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             {/* Email field */}
             <div style={{ marginBottom: '14px' }}>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'rgba(255,255,255,0.55)', marginBottom: '8px' }}>
@@ -161,7 +163,6 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
-                  required
                   style={{
                     width: '100%',
                     padding: '13px 16px 13px 42px',
@@ -209,7 +210,6 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  required
                   style={{
                     width: '100%',
                     padding: '13px 16px 13px 42px',

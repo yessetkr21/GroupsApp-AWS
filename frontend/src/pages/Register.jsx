@@ -16,6 +16,10 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!username.trim()) return setError('Ingresa un nombre de usuario');
+    if (!email.trim()) return setError('Ingresa tu email');
+    if (!password) return setError('Ingresa una contraseña');
+    if (password.length < 6) return setError('La contraseña debe tener al menos 6 caracteres');
     try {
       await register(username, email, password);
       navigate('/');
@@ -168,7 +172,7 @@ export default function Register() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             {/* Username field */}
             <div style={{ marginBottom: '12px' }}>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'rgba(255,255,255,0.55)', marginBottom: '6px' }}>
@@ -181,7 +185,6 @@ export default function Register() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="tu_usuario"
-                  required
                   style={inputStyle}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
@@ -201,7 +204,6 @@ export default function Register() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
-                  required
                   style={inputStyle}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
@@ -221,8 +223,6 @@ export default function Register() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  minLength={6}
-                  required
                   style={inputStyle}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
