@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { MessageCircle, Mail, Lock, ArrowRight } from 'lucide-react';
+import { MessageCircle, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
 import LightRays from '../components/backgrounds/LightRays';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -118,23 +119,21 @@ export default function Login() {
 
           {/* Error */}
           {error && (
-            <div
+            <Alert
+              variant="destructive"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '12px 16px',
-                borderRadius: '12px',
                 background: 'rgba(239,68,68,0.08)',
                 border: '1px solid rgba(239,68,68,0.2)',
+                borderRadius: '12px',
+                marginBottom: '20px',
                 color: '#f87171',
-                fontSize: '13px',
-                marginBottom: '24px',
               }}
             >
-              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f87171', flexShrink: 0 }} />
-              {error}
-            </div>
+              <AlertCircle style={{ width: '16px', height: '16px', color: '#f87171' }} />
+              <AlertDescription style={{ color: '#f87171', fontSize: '13px' }}>
+                {error}
+              </AlertDescription>
+            </Alert>
           )}
 
           {/* Form */}
