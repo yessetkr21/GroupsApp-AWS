@@ -4,14 +4,14 @@ import { useSocket } from '../../context/SocketContext';
 import GroupList from '../groups/GroupList';
 import GroupCreate from '../groups/GroupCreate';
 import ChannelList from '../groups/ChannelList';
-import { MessageCircle, Users, UserPlus, LogOut, Plus, Search, ArrowLeft } from 'lucide-react';
+import { MessageCircle, Users, UserPlus, LogOut, Plus, Search, ArrowLeft, Hash } from 'lucide-react';
 import api from '../../services/api';
 import { getInitials, getAvatarColor } from '../../lib/utils';
 
 export default function Sidebar({ groups, contacts, activeChat, setActiveChat, onGroupCreated, channels, setContacts }) {
   const { user, logout } = useAuth();
   const { onlineUsers } = useSocket();
-  const [tab, setTab] = useState('groups'); // groups | contacts
+  const [tab, setTab] = useState('groups');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showAddContact, setShowAddContact] = useState(false);
   const [contactSearch, setContactSearch] = useState('');
@@ -57,110 +57,104 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
   const filteredContacts = contacts.filter((c) => c.username.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="w-[380px] min-w-[380px] bg-white border-r border-gray-200 flex flex-col h-full">
+    <div style={{ width: '340px', minWidth: '340px', background: '#0f0f17', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', height: '100%' }}>
+
       {/* Header */}
-      <div className="bg-[#075E54] text-white px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <MessageCircle className="w-6 h-6" />
-          <span className="font-semibold text-lg">GroupsApp</span>
+      <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(124,58,237,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <MessageCircle style={{ width: '16px', height: '16px', color: '#a78bfa' }} />
+          </div>
+          <span style={{ fontWeight: 600, fontSize: '15px', color: '#ffffff' }}>GroupsApp</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div style={{ display: 'flex', gap: '4px' }}>
           <button
             onClick={() => setShowCreateGroup(true)}
-            className="p-2 hover:bg-white/10 rounded-full transition"
+            style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', transition: 'all 0.15s' }}
             title="Crear grupo"
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#ffffff'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
           >
-            <Plus className="w-5 h-5" />
+            <Plus style={{ width: '16px', height: '16px' }} />
           </button>
           <button
             onClick={logout}
-            className="p-2 hover:bg-white/10 rounded-full transition"
+            style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', transition: 'all 0.15s' }}
             title="Cerrar sesión"
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#f87171'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut style={{ width: '16px', height: '16px' }} />
           </button>
         </div>
       </div>
 
       {/* User info */}
-      <div className="px-4 py-2 bg-gray-50 border-b flex items-center gap-3">
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
-          style={{ backgroundColor: getAvatarColor(user?.username || '') }}
+          style={{ width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '13px', fontWeight: 700, flexShrink: 0, backgroundColor: getAvatarColor(user?.username || '') }}
         >
           {getInitials(user?.username || '?')}
         </div>
-        <div>
-          <p className="font-medium text-sm text-gray-800">{user?.username}</p>
-          <p className="text-xs text-gray-500">{user?.email}</p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontWeight: 600, fontSize: '13px', color: '#ffffff', margin: 0, lineHeight: 1.3 }}>{user?.username}</p>
+          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
         </div>
+        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', flexShrink: 0 }} />
       </div>
 
       {/* Search */}
-      <div className="px-3 py-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+        <div style={{ position: 'relative' }}>
+          <Search style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: '14px', height: '14px', color: 'rgba(255,255,255,0.25)' }} />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar..."
-            className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none focus:bg-gray-200 transition"
+            style={{ width: '100%', padding: '8px 12px 8px 32px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#ffffff', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b">
-        <button
-          onClick={() => { setTab('groups'); setSelectedGroup(null); }}
-          className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-1.5 transition ${
-            tab === 'groups'
-              ? 'text-[#075E54] border-b-2 border-[#075E54]'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          Grupos
-        </button>
-        <button
-          onClick={() => { setTab('contacts'); setSelectedGroup(null); }}
-          className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-1.5 transition ${
-            tab === 'contacts'
-              ? 'text-[#075E54] border-b-2 border-[#075E54]'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          <MessageCircle className="w-4 h-4" />
-          Contactos
-        </button>
+      <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        {[
+          { key: 'groups', label: 'Grupos', icon: <Users style={{ width: '14px', height: '14px' }} /> },
+          { key: 'contacts', label: 'Contactos', icon: <MessageCircle style={{ width: '14px', height: '14px' }} /> },
+        ].map(({ key, label, icon }) => (
+          <button
+            key={key}
+            onClick={() => { setTab(key); setSelectedGroup(null); }}
+            style={{
+              flex: 1, padding: '10px', background: 'transparent', border: 'none', cursor: 'pointer',
+              fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+              color: tab === key ? '#a78bfa' : 'rgba(255,255,255,0.35)',
+              borderBottom: tab === key ? '2px solid #7c3aed' : '2px solid transparent',
+              transition: 'all 0.15s',
+            }}
+          >
+            {icon}{label}
+          </button>
+        ))}
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div style={{ flex: 1, overflowY: 'auto' }}>
         {tab === 'groups' && !selectedGroup && (
-          <GroupList
-            groups={filteredGroups}
-            activeChat={activeChat}
-            onSelect={handleSelectGroup}
-          />
+          <GroupList groups={filteredGroups} activeChat={activeChat} onSelect={handleSelectGroup} />
         )}
 
         {tab === 'groups' && selectedGroup && (
           <div>
             <button
               onClick={() => { setSelectedGroup(null); setActiveChat({ type: 'group', id: selectedGroup.id, name: selectedGroup.name }); }}
-              className="flex items-center gap-2 px-4 py-3 text-sm text-[#075E54] hover:bg-gray-50 w-full"
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#a78bfa', fontSize: '13px', width: '100%', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft style={{ width: '14px', height: '14px' }} />
               Volver a grupos
             </button>
-            <ChannelList
-              channels={channels}
-              activeChat={activeChat}
-              onSelect={handleSelectChannel}
-              groupId={selectedGroup.id}
-            />
+            <ChannelList channels={channels} activeChat={activeChat} onSelect={handleSelectChannel} groupId={selectedGroup.id} />
           </div>
         )}
 
@@ -168,39 +162,33 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
           <div>
             <button
               onClick={() => setShowAddContact(!showAddContact)}
-              className="flex items-center gap-2 px-4 py-3 text-sm text-[#25D366] hover:bg-gray-50 w-full border-b"
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#a78bfa', fontSize: '13px', width: '100%', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
             >
-              <UserPlus className="w-4 h-4" />
+              <UserPlus style={{ width: '14px', height: '14px' }} />
               Agregar contacto
             </button>
 
             {showAddContact && (
-              <div className="px-4 py-3 border-b bg-gray-50">
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                 <input
                   type="text"
                   value={contactSearch}
                   onChange={(e) => handleSearchContacts(e.target.value)}
                   placeholder="Buscar por username o email..."
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#25D366]"
+                  style={{ width: '100%', padding: '8px 12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#ffffff', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
                   autoFocus
                 />
                 {searchResults.map((u) => (
-                  <div
-                    key={u.id}
-                    className="flex items-center justify-between py-2 mt-1"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                        style={{ backgroundColor: getAvatarColor(u.username) }}
-                      >
+                  <div key={u.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', marginTop: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '30px', height: '30px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '11px', fontWeight: 700, backgroundColor: getAvatarColor(u.username) }}>
                         {getInitials(u.username)}
                       </div>
-                      <span className="text-sm">{u.username}</span>
+                      <span style={{ fontSize: '13px', color: '#ffffff' }}>{u.username}</span>
                     </div>
                     <button
                       onClick={() => handleAddContact(u.username)}
-                      className="text-xs bg-[#25D366] text-white px-3 py-1 rounded-full hover:bg-[#128C7E]"
+                      style={{ padding: '4px 12px', background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: '20px', color: '#a78bfa', fontSize: '12px', cursor: 'pointer' }}
                     >
                       Agregar
                     </button>
@@ -209,48 +197,41 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
               </div>
             )}
 
-            {filteredContacts.map((contact) => (
-              <div
-                key={contact.id}
-                onClick={() => handleSelectDM(contact)}
-                className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-100 transition ${
-                  activeChat?.type === 'dm' && activeChat?.id === contact.id ? 'bg-gray-100' : ''
-                }`}
-              >
-                <div className="relative">
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                    style={{ backgroundColor: getAvatarColor(contact.username) }}
-                  >
-                    {getInitials(contact.username)}
+            {filteredContacts.map((contact) => {
+              const isActive = activeChat?.type === 'dm' && activeChat?.id === contact.id;
+              const isOnline = onlineUsers.has(contact.id);
+              return (
+                <div
+                  key={contact.id}
+                  onClick={() => handleSelectDM(contact)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', cursor: 'pointer',
+                    background: isActive ? 'rgba(124,58,237,0.12)' : 'transparent',
+                    borderLeft: isActive ? '2px solid #7c3aed' : '2px solid transparent',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontWeight: 700, fontSize: '14px', backgroundColor: getAvatarColor(contact.username) }}>
+                      {getInitials(contact.username)}
+                    </div>
+                    <span style={{ position: 'absolute', bottom: '1px', right: '1px', width: '10px', height: '10px', borderRadius: '50%', background: isOnline ? '#22c55e' : '#4b5563', border: '2px solid #0f0f17' }} />
                   </div>
-                  <span
-                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
-                      onlineUsers.has(contact.id) ? 'bg-green-500' : 'bg-gray-400'
-                    }`}
-                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontWeight: 500, fontSize: '14px', color: '#ffffff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{contact.username}</p>
+                    <p style={{ fontSize: '12px', color: isOnline ? '#22c55e' : 'rgba(255,255,255,0.3)', margin: 0 }}>{isOnline ? 'En línea' : 'Desconectado'}</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-gray-800 truncate">{contact.username}</p>
-                  <p className="text-xs text-gray-500">
-                    {onlineUsers.has(contact.id) ? 'En línea' : 'Desconectado'}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Create group modal */}
       {showCreateGroup && (
-        <GroupCreate
-          onClose={() => setShowCreateGroup(false)}
-          onCreated={() => {
-            onGroupCreated();
-            setShowCreateGroup(false);
-          }}
-        />
+        <GroupCreate onClose={() => setShowCreateGroup(false)} onCreated={() => { onGroupCreated(); setShowCreateGroup(false); }} />
       )}
     </div>
   );

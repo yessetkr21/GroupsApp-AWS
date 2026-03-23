@@ -1,11 +1,11 @@
 import { useState, useRef } from 'react';
-import { Send, Paperclip, Image, X } from 'lucide-react';
+import { Send, Paperclip, X } from 'lucide-react';
 import api from '../../services/api';
 
 export default function MessageInput({ onSend, onTyping }) {
   const [text, setText] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [preview, setPreview] = useState(null); // { file, url, type }
+  const [preview, setPreview] = useState(null);
   const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
@@ -17,10 +17,7 @@ export default function MessageInput({ onSend, onTyping }) {
   };
 
   const handleSend = () => {
-    if (preview) {
-      handleUploadAndSend();
-      return;
-    }
+    if (preview) { handleUploadAndSend(); return; }
     if (!text.trim()) return;
     onSend(text.trim());
     setText('');
@@ -36,7 +33,6 @@ export default function MessageInput({ onSend, onTyping }) {
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const isImage = file.type.startsWith('image/');
     const url = URL.createObjectURL(file);
     setPreview({ file, url, type: isImage ? 'image' : 'file' });
@@ -49,13 +45,11 @@ export default function MessageInput({ onSend, onTyping }) {
     try {
       const formData = new FormData();
       formData.append('file', preview.file);
-      const res = await api.post('/files/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await api.post('/files/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       onSend(text.trim() || null, preview.type, res.data.url, res.data.name);
       setText('');
       clearPreview();
-    } catch (err) {
+    } catch {
       alert('Error al subir archivo');
     } finally {
       setUploading(false);
@@ -67,67 +61,74 @@ export default function MessageInput({ onSend, onTyping }) {
     setPreview(null);
   };
 
+  const canSend = !uploading && (text.trim().length > 0 || preview);
+
   return (
-    <div className="bg-[#f0f2f5] px-4 py-3 border-t">
-      {/* File preview */}
+    <div style={{ background: '#0f0f17', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '12px 16px' }}>
       {preview && (
-        <div className="mb-2 bg-white rounded-lg p-3 flex items-center gap-3 shadow-sm">
+        <div style={{ marginBottom: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           {preview.type === 'image' ? (
-            <img src={preview.url} alt="Preview" className="w-16 h-16 object-cover rounded" />
+            <img src={preview.url} alt="Preview" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '6px' }} />
           ) : (
-            <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
-              <Paperclip className="w-6 h-6 text-gray-400" />
+            <div style={{ width: '48px', height: '48px', background: 'rgba(124,58,237,0.15)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Paperclip style={{ width: '18px', height: '18px', color: '#a78bfa' }} />
             </div>
           )}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{preview.file.name}</p>
-            <p className="text-xs text-gray-500">
-              {(preview.file.size / 1024).toFixed(1)} KB
-            </p>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: '13px', fontWeight: 500, color: '#ffffff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{preview.file.name}</p>
+            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', margin: 0 }}>{(preview.file.size / 1024).toFixed(1)} KB</p>
           </div>
-          <button onClick={clearPreview} className="p-1 hover:bg-gray-100 rounded-full">
-            <X className="w-4 h-4 text-gray-500" />
+          <button onClick={clearPreview} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.35)', padding: '4px', display: 'flex' }}>
+            <X style={{ width: '16px', height: '16px' }} />
           </button>
         </div>
       )}
 
-      <div className="flex items-end gap-2">
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full transition shrink-0"
+          style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', flexShrink: 0, transition: 'all 0.15s' }}
           title="Adjuntar archivo"
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(124,58,237,0.15)'; e.currentTarget.style.color = '#a78bfa'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
         >
-          <Paperclip className="w-5 h-5" />
+          <Paperclip style={{ width: '16px', height: '16px' }} />
         </button>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          onChange={handleFileSelect}
-          accept="image/*,.pdf,.doc,.docx,.txt,.zip,.rar"
-        />
+        <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={handleFileSelect} accept="image/*,.pdf,.doc,.docx,.txt,.zip,.rar" />
 
-        <div className="flex-1 bg-white rounded-2xl border shadow-sm">
+        <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', transition: 'border-color 0.15s' }}
+          onFocusCapture={(e) => e.currentTarget.style.borderColor = 'rgba(124,58,237,0.4)'}
+          onBlurCapture={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+        >
           <textarea
             value={text}
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}
             placeholder="Escribe un mensaje..."
-            className="w-full px-4 py-2.5 text-sm resize-none max-h-32 focus:outline-none rounded-2xl"
             rows={1}
-            style={{ minHeight: '42px' }}
+            style={{ width: '100%', padding: '10px 14px', background: 'transparent', border: 'none', color: '#ffffff', fontSize: '14px', resize: 'none', maxHeight: '120px', outline: 'none', boxSizing: 'border-box', lineHeight: 1.5, fontFamily: 'inherit' }}
           />
         </div>
 
         <button
           onClick={handleSend}
-          disabled={uploading || (!text.trim() && !preview)}
-          className="p-2.5 bg-[#25D366] text-white rounded-full hover:bg-[#128C7E] transition disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+          disabled={!canSend}
+          style={{
+            width: '38px', height: '38px', borderRadius: '10px', border: 'none', cursor: canSend ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s',
+            background: canSend ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : 'rgba(255,255,255,0.06)',
+            color: canSend ? '#ffffff' : 'rgba(255,255,255,0.2)',
+            boxShadow: canSend ? '0 4px 12px rgba(124,58,237,0.35)' : 'none',
+          }}
         >
-          <Send className="w-5 h-5" />
+          {uploading
+            ? <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#ffffff', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+            : <Send style={{ width: '16px', height: '16px' }} />
+          }
         </button>
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } } textarea::placeholder { color: rgba(255,255,255,0.25) !important; }`}</style>
     </div>
   );
 }

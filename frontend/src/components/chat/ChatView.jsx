@@ -4,13 +4,11 @@ import { formatDate } from '../../lib/utils';
 
 export default function ChatView({ messages, currentUser }) {
   const bottomRef = useRef(null);
-  const containerRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Group messages by date
   const groupedMessages = [];
   let lastDate = '';
 
@@ -24,11 +22,16 @@ export default function ChatView({ messages, currentUser }) {
   });
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto chat-bg px-4 py-2">
+    <div
+      style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', background: '#09090f', display: 'flex', flexDirection: 'column' }}
+    >
       {groupedMessages.length === 0 && (
-        <div className="flex items-center justify-center h-full">
-          <div className="bg-white/80 rounded-lg px-6 py-3 shadow-sm">
-            <p className="text-gray-500 text-sm">No hay mensajes aún. ¡Envía el primero!</p>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+              <span style={{ fontSize: '20px' }}>💬</span>
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px', margin: 0 }}>No hay mensajes aún. ¡Envía el primero!</p>
           </div>
         </div>
       )}
@@ -36,8 +39,8 @@ export default function ChatView({ messages, currentUser }) {
       {groupedMessages.map((item, i) => {
         if (item.type === 'date') {
           return (
-            <div key={`date-${i}`} className="flex justify-center my-3">
-              <span className="bg-white/90 text-gray-500 text-xs px-4 py-1.5 rounded-lg shadow-sm">
+            <div key={`date-${i}`} style={{ display: 'flex', justifyContent: 'center', margin: '16px 0 8px' }}>
+              <span style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)', fontSize: '11px', padding: '4px 12px', borderRadius: '20px' }}>
                 {item.date}
               </span>
             </div>
@@ -46,14 +49,7 @@ export default function ChatView({ messages, currentUser }) {
 
         const msg = item.data;
         const isOwn = msg.sender_id === currentUser?.id;
-
-        return (
-          <MessageBubble
-            key={msg.id || `temp-${i}`}
-            message={msg}
-            isOwn={isOwn}
-          />
-        );
+        return <MessageBubble key={msg.id || `temp-${i}`} message={msg} isOwn={isOwn} />;
       })}
 
       <div ref={bottomRef} />

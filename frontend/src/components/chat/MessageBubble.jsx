@@ -1,16 +1,12 @@
-import { Check, CheckCheck, File, Image } from 'lucide-react';
-import { formatTime, getAvatarColor } from '../../lib/utils';
+import { Check, CheckCheck, File } from 'lucide-react';
+import { formatTime, getAvatarColor, getInitials } from '../../lib/utils';
 
 export default function MessageBubble({ message, isOwn }) {
   const statusIcon = () => {
     if (!isOwn) return null;
-    if (message.status === 'read') {
-      return <CheckCheck className="w-4 h-4 text-blue-500" />;
-    }
-    if (message.status === 'delivered') {
-      return <CheckCheck className="w-4 h-4 text-gray-400" />;
-    }
-    return <Check className="w-4 h-4 text-gray-400" />;
+    if (message.status === 'read') return <CheckCheck style={{ width: '14px', height: '14px', color: '#a78bfa' }} />;
+    if (message.status === 'delivered') return <CheckCheck style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.3)' }} />;
+    return <Check style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.3)' }} />;
   };
 
   const renderContent = () => {
@@ -20,10 +16,14 @@ export default function MessageBubble({ message, isOwn }) {
           <img
             src={message.file_url}
             alt={message.file_name || 'Imagen'}
-            className="max-w-[280px] rounded-lg cursor-pointer hover:opacity-90 transition"
+            style={{ maxWidth: '260px', borderRadius: '8px', cursor: 'pointer', display: 'block' }}
             onClick={() => window.open(message.file_url, '_blank')}
           />
-          {message.content && <p className="mt-1.5 text-[14px] leading-relaxed">{message.content}</p>}
+          {message.content && (
+            <p style={{ marginTop: '6px', fontSize: '14px', lineHeight: 1.5, color: isOwn ? '#ffffff' : 'rgba(255,255,255,0.9)', margin: '6px 0 0 0' }}>
+              {message.content}
+            </p>
+          )}
         </div>
       );
     }
@@ -34,45 +34,60 @@ export default function MessageBubble({ message, isOwn }) {
           href={message.file_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-3 bg-white/50 rounded-lg p-3 hover:bg-white/70 transition"
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '10px', textDecoration: 'none' }}
         >
-          <div className="w-10 h-10 bg-[#075E54] rounded-lg flex items-center justify-center shrink-0">
-            <File className="w-5 h-5 text-white" />
+          <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(124,58,237,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <File style={{ width: '18px', height: '18px', color: '#a78bfa' }} />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium truncate">{message.file_name || 'Archivo'}</p>
-            <p className="text-xs text-gray-500">Descargar</p>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: '13px', fontWeight: 500, color: '#ffffff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{message.file_name || 'Archivo'}</p>
+            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>Descargar</p>
           </div>
         </a>
       );
     }
 
-    return <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>;
+    return (
+      <p style={{ fontSize: '14px', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, color: isOwn ? '#ffffff' : 'rgba(255,255,255,0.9)' }}>
+        {message.content}
+      </p>
+    );
   };
 
   return (
-    <div className={`flex mb-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
-      <div
-        className={`max-w-[65%] rounded-lg px-3 py-1.5 shadow-sm relative ${
-          isOwn
-            ? 'bg-[#DCF8C6] rounded-tr-none'
-            : 'bg-white rounded-tl-none'
-        }`}
-      >
+    <div style={{ display: 'flex', marginBottom: '4px', justifyContent: isOwn ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: '8px' }}>
+      {!isOwn && (
+        <div style={{ width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '10px', fontWeight: 700, flexShrink: 0, marginBottom: '2px', backgroundColor: getAvatarColor(message.sender_username || '') }}>
+          {getInitials(message.sender_username || '?')}
+        </div>
+      )}
+
+      <div style={{ maxWidth: '62%' }}>
         {!isOwn && message.sender_username && (
-          <p
-            className="text-xs font-semibold mb-0.5"
-            style={{ color: getAvatarColor(message.sender_username) }}
-          >
+          <p style={{ fontSize: '11px', fontWeight: 600, marginBottom: '3px', marginLeft: '2px', color: getAvatarColor(message.sender_username) }}>
             {message.sender_username}
           </p>
         )}
 
-        {renderContent()}
+        <div
+          style={{
+            padding: '8px 12px',
+            borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+            background: isOwn
+              ? 'linear-gradient(135deg, #7c3aed, #6d28d9)'
+              : 'rgba(255,255,255,0.07)',
+            border: isOwn ? 'none' : '1px solid rgba(255,255,255,0.07)',
+            boxShadow: isOwn ? '0 2px 12px rgba(124,58,237,0.25)' : 'none',
+          }}
+        >
+          {renderContent()}
 
-        <div className="flex items-center justify-end gap-1 mt-0.5 -mb-0.5">
-          <span className="text-[11px] text-gray-500">{formatTime(message.created_at)}</span>
-          {statusIcon()}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', marginTop: '4px' }}>
+            <span style={{ fontSize: '11px', color: isOwn ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.3)' }}>
+              {formatTime(message.created_at)}
+            </span>
+            {statusIcon()}
+          </div>
         </div>
       </div>
     </div>

@@ -170,52 +170,37 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-screen flex bg-[#f0f2f5]">
-      {/* Main container */}
-      <div className="flex w-full max-w-[1600px] mx-auto shadow-xl h-full">
-        {/* Sidebar */}
-        <Sidebar
-          groups={groups}
-          contacts={contacts}
-          activeChat={activeChat}
-          setActiveChat={setActiveChat}
-          onGroupCreated={refreshGroups}
-          channels={channels}
-          setContacts={setContacts}
-        />
+    <div style={{ height: '100vh', display: 'flex', background: '#09090f', overflow: 'hidden' }}>
+      <Sidebar
+        groups={groups}
+        contacts={contacts}
+        activeChat={activeChat}
+        setActiveChat={setActiveChat}
+        onGroupCreated={refreshGroups}
+        channels={channels}
+        setContacts={setContacts}
+      />
 
-        {/* Chat area */}
-        <div className="flex-1 flex flex-col">
-          {activeChat ? (
-            <>
-              <Header
-                activeChat={activeChat}
-                members={members}
-                typingUsers={typingUsers}
-              />
-              <ChatView
-                messages={messages}
-                currentUser={user}
-              />
-              <MessageInput
-                onSend={sendMessage}
-                onTyping={handleTyping}
-              />
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center bg-[#f0f2f5]">
-              <div className="text-center">
-                <div className="w-64 h-64 mx-auto mb-6 flex items-center justify-center">
-                  <svg viewBox="0 0 303 172" width="250" className="opacity-30">
-                    <path fill="#DAF7C3" d="M229.565 160.229c32.647-12.196 50.461-45.109 42.594-78.452-3.554-15.075-13.084-27.596-26.116-35.85-12.893-8.166-28.571-11.675-43.565-10.394-7.652.654-15.202 2.463-22.098 5.663-7.119 3.303-13.5 7.942-19.443 13.07a131.4 131.4 0 0 0-16.378 17.262c-5.168 6.537-10.058 13.48-16.064 19.302-5.9 5.72-13.122 10.164-21.1 11.107-7.957.94-16.339-1.92-21.327-8.242-4.87-6.17-5.773-14.422-4.73-22.065 1.04-7.627 3.875-14.886 7.394-21.657 3.52-6.77 7.718-13.12 11.887-19.462 4.17-6.342 8.311-12.677 11.743-19.382 5.028-9.827 8.627-21.058 5.817-31.727-2.82-10.72-13.198-19.013-24.226-19.676-5.46-.328-10.974 1.072-15.586 3.89-4.612 2.82-8.356 6.997-10.792 11.862-4.936 9.858-4.726 21.706-1.37 32.09 3.355 10.385 9.285 19.718 15.514 28.67 13.125 18.862 28.718 36.174 40.14 55.96 5.694 9.867 10.44 20.479 12.214 31.742.926 5.882.97 11.884-.289 17.706-1.258 5.82-3.915 11.413-8.106 15.539-4.153 4.087-10.11 6.488-16.133 5.988-5.908-.492-11.373-3.908-14.633-8.86-3.218-4.89-4.193-10.944-3.57-16.75.627-5.842 2.717-11.426 5.327-16.702 10.476-21.168 28.89-37.506 50.34-44.474"/>
-                  </svg>
-                </div>
-                <h2 className="text-3xl font-light text-gray-600 mb-2">GroupsApp Web</h2>
-                <p className="text-gray-400">Selecciona un grupo o contacto para empezar a chatear</p>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        {activeChat ? (
+          <>
+            <Header activeChat={activeChat} members={members} typingUsers={typingUsers} />
+            <ChatView messages={messages} currentUser={user} />
+            <MessageInput onSend={sendMessage} onTyping={handleTyping} />
+          </>
+        ) : (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#09090f' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
               </div>
+              <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'rgba(255,255,255,0.7)', margin: '0 0 8px 0' }}>GroupsApp</h2>
+              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.25)', margin: 0 }}>Selecciona un grupo o contacto para empezar</p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

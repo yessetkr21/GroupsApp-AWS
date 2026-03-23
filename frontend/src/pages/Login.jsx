@@ -33,15 +33,15 @@ export default function Login() {
       {/* Particles Background */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
         <Particles
-          particleCount={250}
-          particleSpread={12}
-          speed={0.05}
-          particleColors={['#a78bfa', '#7c3aed', '#6d28d9', '#8b5cf6', '#c084fc']}
+          particleCount={200}
+          particleSpread={10}
+          speed={0.03}
+          particleColors={['#ffffff']}
           moveParticlesOnHover={false}
-          alphaParticles={true}
-          particleBaseSize={120}
-          sizeRandomness={1.5}
-          cameraDistance={22}
+          alphaParticles={false}
+          particleBaseSize={100}
+          sizeRandomness={1}
+          cameraDistance={20}
           disableRotation={false}
         />
       </div>
