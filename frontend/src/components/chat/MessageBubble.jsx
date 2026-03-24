@@ -63,8 +63,8 @@ export default function MessageBubble({ message, isOwn, onReact, currentUserId }
   return (
     <div
       style={{ display: 'flex', marginBottom: '4px', justifyContent: isOwn ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: '8px' }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={() => {}}
+      onClick={() => setHovered((prev) => !prev)}
     >
       {!isOwn && (
         <div style={{ width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '10px', fontWeight: 700, flexShrink: 0, marginBottom: '2px', backgroundColor: getAvatarColor(message.sender_username || '') }}>
@@ -112,7 +112,7 @@ export default function MessageBubble({ message, isOwn, onReact, currentUserId }
             {EMOJI_OPTIONS.map((emoji) => (
               <button
                 key={emoji}
-                onClick={() => { if (onReact) onReact(message.id, emoji); }}
+                onClick={() => { if (onReact) onReact(message.id, emoji); setHovered(false); }}
                 style={{
                   width: '28px', height: '28px', borderRadius: '50%', border: 'none',
                   background: 'transparent', cursor: 'pointer', fontSize: '15px',
