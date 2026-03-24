@@ -29,7 +29,7 @@ function setupPresenceHandlers(io, socket) {
         } catch (err) {
           console.error('Update presence error:', err);
         }
-        io.emit('user_offline', { user_id: userId, username: socket.user.username });
+        io.emit('user_offline', { user_id: userId, username: socket.user.username, last_seen: new Date().toISOString() });
       }
     }
   });

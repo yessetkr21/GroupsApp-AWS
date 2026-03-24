@@ -8,6 +8,7 @@ export function SocketProvider({ children }) {
   const { token } = useAuth();
   const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const [lastSeenMap, setLastSeenMap] = useState(new Map());
 
   useEffect(() => {
     if (!token) {
@@ -34,12 +35,22 @@ export function SocketProvider({ children }) {
 
     newSocket.on('user_online', ({ user_id }) => {
       setOnlineUsers((prev) => new Set([...prev, user_id]));
+      setLastSeenMap((prev) => {
+        const next = new Map(prev);
+        next.delete(user_id);
+        return next;
+      });
     });
 
-    newSocket.on('user_offline', ({ user_id }) => {
+    newSocket.on('user_offline', ({ user_id, last_seen }) => {
       setOnlineUsers((prev) => {
         const next = new Set(prev);
         next.delete(user_id);
+        return next;
+      });
+      setLastSeenMap((prev) => {
+        const next = new Map(prev);
+        next.set(user_id, last_seen);
         return next;
       });
     });
@@ -52,7 +63,7 @@ export function SocketProvider({ children }) {
   }, [token]);
 
   return (
-    <SocketContext.Provider value={{ socket, onlineUsers }}>
+    <SocketContext.Provider value={{ socket, onlineUsers, lastSeenMap }}>
       {children}
     </SocketContext.Provider>
   );

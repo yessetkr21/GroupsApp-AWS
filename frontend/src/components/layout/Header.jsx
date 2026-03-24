@@ -1,9 +1,9 @@
 import { useSocket } from '../../context/SocketContext';
 import { Users, Hash, MessageCircle } from 'lucide-react';
-import { getInitials, getAvatarColor } from '../../lib/utils';
+import { getInitials, getAvatarColor, formatLastSeen } from '../../lib/utils';
 
 export default function Header({ activeChat, members, typingUsers }) {
-  const { onlineUsers } = useSocket();
+  const { onlineUsers, lastSeenMap } = useSocket();
   const onlineCount = members.filter((m) => onlineUsers.has(m.id)).length;
 
   const getIcon = () => {
@@ -20,7 +20,7 @@ export default function Header({ activeChat, members, typingUsers }) {
     if (activeChat.type === 'dm') {
       return onlineUsers.has(activeChat.id)
         ? <span style={{ color: '#22c55e' }}>En línea</span>
-        : <span style={{ color: 'rgba(255,255,255,0.3)' }}>Desconectado</span>;
+        : <span style={{ color: 'rgba(255,255,255,0.3)' }}>{formatLastSeen(lastSeenMap.get(activeChat.id))}</span>;
     }
     if (activeChat.type === 'group') {
       return <span style={{ color: 'rgba(255,255,255,0.4)' }}>{members.length} miembros · {onlineCount} en línea</span>;
