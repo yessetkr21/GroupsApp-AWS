@@ -4,6 +4,20 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+async function loadReactions(messageIds) {
+  if (messageIds.length === 0) return {};
+  const ph = messageIds.map(() => '?').join(',');
+  const [rows] = await pool.query(
+    `SELECT message_id, emoji, COUNT(*) as count, JSON_ARRAYAGG(JSON_OBJECT('user_id', user_id)) as users FROM message_reactions WHERE message_id IN (${ph}) GROUP BY message_id, emoji`, messageIds
+  );
+  const map = {};
+  rows.forEach((r) => {
+    if (!map[r.message_id]) map[r.message_id] = [];
+    map[r.message_id].push({ emoji: r.emoji, count: r.count, users: typeof r.users === 'string' ? JSON.parse(r.users) : r.users });
+  });
+  return map;
+}
+
 // GET /api/messages/group/:groupId — historial de grupo (group_messages table)
 router.get('/group/:groupId', auth, async (req, res) => {
   try {
@@ -27,7 +41,8 @@ router.get('/group/:groupId', auth, async (req, res) => {
     params.push(limit);
 
     const [messages] = await pool.query(query, params);
-    res.json({ success: true, data: messages.reverse() });
+    const rm = await loadReactions(messages.map((m) => m.id));
+    res.json({ success: true, data: messages.reverse().map((m) => ({ ...m, reactions: rm[m.id] || [] })) });
   } catch (err) {
     console.error('Get group messages error:', err);
     res.status(500).json({ success: false, error: 'Error del servidor' });
@@ -57,7 +72,8 @@ router.get('/channel/:channelId', auth, async (req, res) => {
     params.push(limit);
 
     const [messages] = await pool.query(query, params);
-    res.json({ success: true, data: messages.reverse() });
+    const rm = await loadReactions(messages.map((m) => m.id));
+    res.json({ success: true, data: messages.reverse().map((m) => ({ ...m, reactions: rm[m.id] || [] })) });
   } catch (err) {
     console.error('Get channel messages error:', err);
     res.status(500).json({ success: false, error: 'Error del servidor' });
@@ -92,7 +108,8 @@ router.get('/dm/:userId', auth, async (req, res) => {
       ...m,
       status: m.is_read ? 'read' : (m.status || 'sent'),
     }));
-    res.json({ success: true, data: mapped.reverse() });
+    const rm = await loadReactions(mapped.map((m) => m.id));
+    res.json({ success: true, data: mapped.reverse().map((m) => ({ ...m, reactions: rm[m.id] || [] })) });
   } catch (err) {
     console.error('Get DM messages error:', err);
     res.status(500).json({ success: false, error: 'Error del servidor' });

@@ -119,16 +119,24 @@ export default function Chat() {
       );
     };
 
+    const handleReactionUpdated = ({ message_id, reactions }) => {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === message_id ? { ...m, reactions } : m))
+      );
+    };
+
     socket.on('new_message', handleNewMessage);
     socket.on('user_typing', handleTyping);
     socket.on('user_stop_typing', handleStopTyping);
     socket.on('messages_read', handleMessagesRead);
+    socket.on('reaction_updated', handleReactionUpdated);
 
     return () => {
       socket.off('new_message', handleNewMessage);
       socket.off('user_typing', handleTyping);
       socket.off('user_stop_typing', handleStopTyping);
       socket.off('messages_read', handleMessagesRead);
+      socket.off('reaction_updated', handleReactionUpdated);
     };
   }, [socket, activeChat, user?.id]);
 
@@ -165,6 +173,19 @@ export default function Chat() {
     socket.emit('typing', data);
   }, [socket, activeChat]);
 
+  const handleReact = useCallback(
+    (messageId, emoji) => {
+      if (!socket || !activeChat) return;
+      const messageTable = activeChat.type === 'dm' ? 'messages' : 'group_messages';
+      const data = { message_id: messageId, emoji, message_table: messageTable };
+      if (activeChat.type === 'group') data.group_id = activeChat.id;
+      else if (activeChat.type === 'channel') data.channel_id = activeChat.id;
+      else if (activeChat.type === 'dm') data.receiver_id = activeChat.id;
+      socket.emit('toggle_reaction', data);
+    },
+    [socket, activeChat]
+  );
+
   const refreshGroups = () => {
     api.get('/groups').then((res) => setGroups(res.data));
   };
@@ -185,7 +206,7 @@ export default function Chat() {
         {activeChat ? (
           <>
             <Header activeChat={activeChat} members={members} typingUsers={typingUsers} />
-            <ChatView messages={messages} currentUser={user} />
+            <ChatView messages={messages} currentUser={user} onReact={handleReact} />
             <MessageInput onSend={sendMessage} onTyping={handleTyping} />
           </>
         ) : (

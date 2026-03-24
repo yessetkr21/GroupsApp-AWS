@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
 import { formatDate } from '../../lib/utils';
 
-export default function ChatView({ messages, currentUser }) {
+export default function ChatView({ messages, currentUser, onReact }) {
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function ChatView({ messages, currentUser }) {
 
         const msg = item.data;
         const isOwn = msg.sender_id === currentUser?.id;
-        return <MessageBubble key={msg.id || `temp-${i}`} message={msg} isOwn={isOwn} />;
+        return <MessageBubble key={msg.id || `temp-${i}`} message={msg} isOwn={isOwn} onReact={onReact} currentUserId={currentUser?.id} />;
       })}
 
       <div ref={bottomRef} />
