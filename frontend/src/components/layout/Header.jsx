@@ -18,9 +18,12 @@ export default function Header({ activeChat, members, typingUsers }) {
       return <span style={{ color: '#a78bfa' }}>{names} escribiendo...</span>;
     }
     if (activeChat.type === 'dm') {
+      const dbLastSeen = activeChat.last_seen;
+      const socketLastSeen = lastSeenMap.get(activeChat.id);
+      const lastSeen = socketLastSeen || dbLastSeen;
       return onlineUsers.has(activeChat.id)
         ? <span style={{ color: '#22c55e' }}>En línea</span>
-        : <span style={{ color: 'rgba(255,255,255,0.3)' }}>{formatLastSeen(lastSeenMap.get(activeChat.id))}</span>;
+        : <span style={{ color: 'rgba(255,255,255,0.3)' }}>{lastSeen ? formatLastSeen(lastSeen) : 'Desconectado'}</span>;
     }
     if (activeChat.type === 'group') {
       return <span style={{ color: 'rgba(255,255,255,0.4)' }}>{members.length} miembros · {onlineCount} en línea</span>;
