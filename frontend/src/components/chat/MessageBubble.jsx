@@ -1,7 +1,13 @@
+import { useState } from 'react';
 import { Check, CheckCheck, File } from 'lucide-react';
 import { formatTime, getAvatarColor, getInitials } from '../../lib/utils';
 
-export default function MessageBubble({ message, isOwn }) {
+const EMOJI_OPTIONS = ['👍', '❤️', '😂', '🔥', '👏', '😮'];
+
+export default function MessageBubble({ message, isOwn, onReact, currentUserId }) {
+  const [hovered, setHovered] = useState(false);
+  const reactions = message.reactions || [];
+
   const statusIcon = () => {
     if (!isOwn) return null;
     if (message.status === 'read') return <CheckCheck style={{ width: '14px', height: '14px', color: '#a78bfa' }} />;
@@ -55,7 +61,11 @@ export default function MessageBubble({ message, isOwn }) {
   };
 
   return (
-    <div style={{ display: 'flex', marginBottom: '4px', justifyContent: isOwn ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: '8px' }}>
+    <div
+      style={{ display: 'flex', marginBottom: '4px', justifyContent: isOwn ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: '8px' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       {!isOwn && (
         <div style={{ width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '10px', fontWeight: 700, flexShrink: 0, marginBottom: '2px', backgroundColor: getAvatarColor(message.sender_username || '') }}>
           {getInitials(message.sender_username || '?')}
@@ -89,6 +99,62 @@ export default function MessageBubble({ message, isOwn }) {
             {statusIcon()}
           </div>
         </div>
+
+        {/* Emoji picker - appears on hover, rendered inline */}
+        {hovered && (
+          <div style={{
+            display: 'flex', gap: '2px', marginTop: '3px',
+            background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: '16px', padding: '3px 5px', width: 'fit-content',
+            marginLeft: isOwn ? 'auto' : '0',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}>
+            {EMOJI_OPTIONS.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => { if (onReact) onReact(message.id, emoji); }}
+                style={{
+                  width: '28px', height: '28px', borderRadius: '50%', border: 'none',
+                  background: 'transparent', cursor: 'pointer', fontSize: '15px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: 0, transition: 'all 0.15s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'scale(1.2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.transform = 'scale(1)'; }}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Reaction pills */}
+        {reactions.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px', justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
+            {reactions.map((r) => {
+              const hasReacted = r.users.some((u) => u.user_id === currentUserId);
+              return (
+                <button
+                  key={r.emoji}
+                  onClick={() => { if (onReact) onReact(message.id, r.emoji); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                    padding: '2px 8px', borderRadius: '12px',
+                    border: hasReacted ? '1px solid rgba(124,58,237,0.5)' : '1px solid rgba(255,255,255,0.1)',
+                    background: hasReacted ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.05)',
+                    cursor: 'pointer', fontSize: '13px', color: 'rgba(255,255,255,0.7)',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = hasReacted ? 'rgba(124,58,237,0.25)' : 'rgba(255,255,255,0.1)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = hasReacted ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.05)'; }}
+                >
+                  <span>{r.emoji}</span>
+                  <span style={{ fontSize: '11px', fontWeight: 600 }}>{r.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

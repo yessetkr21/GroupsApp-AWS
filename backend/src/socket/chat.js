@@ -119,6 +119,57 @@ function setupChatHandlers(io, socket) {
     }
   });
 
+  // Toggle reaction on a message
+  socket.on('toggle_reaction', async (data) => {
+    try {
+      const { message_id, emoji, message_table, group_id, channel_id, receiver_id } = data;
+      if (!message_id || !emoji || !message_table) return;
+
+      const [existing] = await pool.query(
+        'SELECT id FROM message_reactions WHERE message_id = ? AND user_id = ? AND emoji = ?',
+        [message_id, socket.user.id, emoji]
+      );
+
+      if (existing.length > 0) {
+        await pool.query('DELETE FROM message_reactions WHERE id = ?', [existing[0].id]);
+      } else {
+        const id = uuidv4();
+        await pool.query(
+          'INSERT INTO message_reactions (id, message_id, user_id, emoji, message_table) VALUES (?, ?, ?, ?, ?)',
+          [id, message_id, socket.user.id, emoji, message_table]
+        );
+      }
+
+      const [reactions] = await pool.query(
+        `SELECT emoji, COUNT(*) as count,
+          JSON_ARRAYAGG(JSON_OBJECT('user_id', user_id)) as users
+        FROM message_reactions WHERE message_id = ? GROUP BY emoji`,
+        [message_id]
+      );
+
+      const parsed = reactions.map((r) => ({
+        emoji: r.emoji,
+        count: r.count,
+        users: typeof r.users === 'string' ? JSON.parse(r.users) : r.users,
+      }));
+
+      const payload = { message_id, reactions: parsed };
+
+      if (channel_id) {
+        io.to(`channel:${channel_id}`).emit('reaction_updated', payload);
+      } else if (group_id) {
+        io.to(`group:${group_id}`).emit('reaction_updated', payload);
+      } else if (receiver_id) {
+        const allSockets = await io.fetchSockets();
+        allSockets
+          .filter((s) => s.user.id === receiver_id || s.user.id === socket.user.id)
+          .forEach((s) => s.emit('reaction_updated', payload));
+      }
+    } catch (err) {
+      console.error('Toggle reaction error:', err);
+    }
+  });
+
   // Mark messages as read
   socket.on('mark_read', async (data) => {
     try {
