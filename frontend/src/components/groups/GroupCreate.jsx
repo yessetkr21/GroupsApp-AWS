@@ -24,57 +24,63 @@ export default function GroupCreate({ onClose, onCreated }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h3 className="text-lg font-semibold text-gray-800">Crear nuevo grupo</h3>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full">
-            <X className="w-5 h-5 text-gray-500" />
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#ffffff', margin: 0 }}>Crear nuevo grupo</h3>
+          <button
+            onClick={onClose}
+            style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)' }}
+          >
+            <X style={{ width: '16px', height: '16px' }} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
           {error && (
-            <div className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-sm">{error}</div>
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', padding: '8px 12px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px' }}>{error}</div>
           )}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'rgba(255,255,255,0.6)', marginBottom: '6px' }}>
               Nombre del grupo *
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#25D366] text-sm"
+              style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#ffffff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
               placeholder="Ej: Proyecto Telemática"
               required
               autoFocus
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'rgba(255,255,255,0.6)', marginBottom: '6px' }}>
               Descripción
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#25D366] text-sm resize-none"
+              style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#ffffff', fontSize: '14px', outline: 'none', resize: 'none', boxSizing: 'border-box' }}
               rows={3}
               placeholder="Descripción del grupo..."
             />
           </div>
-          <div className="flex gap-3 pt-2">
+
+          <div style={{ display: 'flex', gap: '10px' }}>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+              style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="flex-1 px-4 py-2.5 bg-[#25D366] text-white rounded-lg text-sm font-medium hover:bg-[#128C7E] transition disabled:opacity-50"
+              style={{ flex: 1, padding: '10px', background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', border: 'none', borderRadius: '8px', color: '#ffffff', fontSize: '14px', fontWeight: 500, cursor: loading ? 'wait' : 'pointer', opacity: (!name.trim() || loading) ? 0.5 : 1 }}
             >
               {loading ? 'Creando...' : 'Crear Grupo'}
             </button>

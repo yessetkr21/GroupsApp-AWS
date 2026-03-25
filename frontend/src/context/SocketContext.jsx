@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 
@@ -8,6 +8,8 @@ export function SocketProvider({ children }) {
   const { token } = useAuth();
   const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const lastSeenRef = useRef({});
+  const [lastSeenMap, setLastSeenMap] = useState({});
 
   useEffect(() => {
     if (!token) {
@@ -32,16 +34,25 @@ export function SocketProvider({ children }) {
       setOnlineUsers(new Set(users));
     });
 
+    newSocket.on('users_last_seen', (data) => {
+      lastSeenRef.current = { ...lastSeenRef.current, ...data };
+      setLastSeenMap((prev) => ({ ...prev, ...data }));
+    });
+
     newSocket.on('user_online', ({ user_id }) => {
       setOnlineUsers((prev) => new Set([...prev, user_id]));
     });
 
-    newSocket.on('user_offline', ({ user_id }) => {
+    newSocket.on('user_offline', ({ user_id, last_seen }) => {
       setOnlineUsers((prev) => {
         const next = new Set(prev);
         next.delete(user_id);
         return next;
       });
+      if (last_seen) {
+        lastSeenRef.current[user_id] = last_seen;
+        setLastSeenMap((prev) => ({ ...prev, [user_id]: last_seen }));
+      }
     });
 
     setSocket(newSocket);
@@ -52,7 +63,7 @@ export function SocketProvider({ children }) {
   }, [token]);
 
   return (
-    <SocketContext.Provider value={{ socket, onlineUsers }}>
+    <SocketContext.Provider value={{ socket, onlineUsers, lastSeenMap }}>
       {children}
     </SocketContext.Provider>
   );

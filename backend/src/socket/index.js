@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const { setupChatHandlers } = require('./chat');
 const { setupPresenceHandlers } = require('./presence');
 
+let ioInstance = null;
+
 function setupSocket(server) {
   const io = new Server(server, {
     cors: {
@@ -10,6 +12,8 @@ function setupSocket(server) {
       methods: ['GET', 'POST'],
     },
   });
+
+  ioInstance = io;
 
   // Auth middleware for sockets
   io.use((socket, next) => {
@@ -40,4 +44,8 @@ function setupSocket(server) {
   return io;
 }
 
-module.exports = { setupSocket };
+function getIO() {
+  return ioInstance;
+}
+
+module.exports = { setupSocket, getIO };

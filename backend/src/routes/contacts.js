@@ -2,6 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../config/db');
 const auth = require('../middleware/auth');
+const { getIO } = require('../socket');
 
 const router = express.Router();
 
@@ -32,7 +33,7 @@ router.post('/', auth, async (req, res) => {
     }
 
     const [users] = await pool.query(
-      'SELECT id, name as username, email, profile_picture as avatar_url FROM users WHERE name = ?',
+      'SELECT id, name as username, email, profile_picture as avatar_url, is_online, last_seen FROM users WHERE name = ?',
       [username]
     );
     if (users.length === 0) {
@@ -43,11 +44,29 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ success: false, error: 'No puedes agregarte a ti mismo' });
     }
 
-    const id = uuidv4();
+    // Create bidirectional contact relationship
+    const id1 = uuidv4();
+    const id2 = uuidv4();
     await pool.query(
       'INSERT IGNORE INTO contacts (id, user_id, contact_user_id) VALUES (?, ?, ?)',
-      [id, req.user.id, users[0].id]
+      [id1, req.user.id, users[0].id]
     );
+    await pool.query(
+      'INSERT IGNORE INTO contacts (id, user_id, contact_user_id) VALUES (?, ?, ?)',
+      [id2, users[0].id, req.user.id]
+    );
+
+    // Notify the other user via socket so their contact list updates in real-time
+    const io = getIO();
+    if (io) {
+      const [adderInfo] = await pool.query(
+        'SELECT id, name as username, email, profile_picture as avatar_url, is_online, last_seen FROM users WHERE id = ?',
+        [req.user.id]
+      );
+      if (adderInfo.length > 0) {
+        io.to(`user:${users[0].id}`).emit('contact_added', adderInfo[0]);
+      }
+    }
 
     res.status(201).json({ success: true, data: users[0] });
   } catch (err) {
@@ -60,9 +79,16 @@ router.post('/', auth, async (req, res) => {
 router.delete('/:userId', auth, async (req, res) => {
   try {
     await pool.query(
-      'DELETE FROM contacts WHERE user_id = ? AND contact_user_id = ?',
-      [req.user.id, req.params.userId]
+      'DELETE FROM contacts WHERE (user_id = ? AND contact_user_id = ?) OR (user_id = ? AND contact_user_id = ?)',
+      [req.user.id, req.params.userId, req.params.userId, req.user.id]
     );
+
+    // Notify the other user
+    const io = getIO();
+    if (io) {
+      io.to(`user:${req.params.userId}`).emit('contact_removed', { user_id: req.user.id });
+    }
+
     res.json({ success: true, data: { message: 'Contacto eliminado' } });
   } catch (err) {
     console.error('Delete contact error:', err);

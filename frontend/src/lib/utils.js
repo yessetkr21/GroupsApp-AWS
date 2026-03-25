@@ -6,11 +6,59 @@ export function cn(...inputs) {
 }
 
 export function formatTime(date) {
-  return new Date(date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  return new Date(date).toLocaleTimeString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Bogota',
+  });
 }
 
 export function formatDate(date) {
-  return new Date(date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Date(date).toLocaleDateString('es-CO', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'America/Bogota',
+  });
+}
+
+export function formatLastSeen(date) {
+  if (!date) return 'Desconectado';
+  const d = new Date(date);
+  const now = new Date();
+
+  const bogotaFormatter = new Intl.DateTimeFormat('es-CO', {
+    timeZone: 'America/Bogota',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  });
+
+  const dateStrTarget = bogotaFormatter.format(d);
+  const dateStrNow = bogotaFormatter.format(now);
+
+  const time = d.toLocaleTimeString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Bogota',
+  });
+
+  if (dateStrTarget === dateStrNow) {
+    return `Últ. vez hoy a las ${time}`;
+  }
+
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const dateStrYesterday = bogotaFormatter.format(yesterday);
+
+  if (dateStrTarget === dateStrYesterday) {
+    return `Últ. vez ayer a las ${time}`;
+  }
+
+  const dateFormatted = d.toLocaleDateString('es-CO', {
+    day: '2-digit',
+    month: 'short',
+    timeZone: 'America/Bogota',
+  });
+  return `Últ. vez ${dateFormatted} a las ${time}`;
 }
 
 export function getInitials(name) {

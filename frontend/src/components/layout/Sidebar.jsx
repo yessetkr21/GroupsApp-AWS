@@ -6,11 +6,11 @@ import GroupCreate from '../groups/GroupCreate';
 import ChannelList from '../groups/ChannelList';
 import { MessageCircle, Users, UserPlus, LogOut, Plus, Search, ArrowLeft, Hash } from 'lucide-react';
 import api from '../../services/api';
-import { getInitials, getAvatarColor } from '../../lib/utils';
+import { getInitials, getAvatarColor, formatLastSeen } from '../../lib/utils';
 
 export default function Sidebar({ groups, contacts, activeChat, setActiveChat, onGroupCreated, channels, setContacts }) {
   const { user, logout } = useAuth();
-  const { onlineUsers } = useSocket();
+  const { onlineUsers, lastSeenMap } = useSocket();
   const [tab, setTab] = useState('groups');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showAddContact, setShowAddContact] = useState(false);
@@ -32,9 +32,16 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
   const handleAddContact = async (username) => {
     try {
       const res = await api.post('/contacts', { username });
-      setContacts((prev) => [...prev, res.data]);
+      const newContact = res.data;
+      setContacts((prev) => {
+        if (prev.some((c) => c.id === newContact.id)) return prev;
+        return [...prev, newContact];
+      });
       setShowAddContact(false);
       setContactSearch('');
+      setSearchResults([]);
+      // Auto-open the DM chat with the new contact
+      setActiveChat({ type: 'dm', id: newContact.id, name: newContact.username });
     } catch (err) {
       alert(err.error || 'Error al agregar contacto');
     }
@@ -221,7 +228,7 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontWeight: 500, fontSize: '14px', color: '#ffffff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{contact.username}</p>
-                    <p style={{ fontSize: '12px', color: isOnline ? '#22c55e' : 'rgba(255,255,255,0.3)', margin: 0 }}>{isOnline ? 'En línea' : 'Desconectado'}</p>
+                    <p style={{ fontSize: '12px', color: isOnline ? '#22c55e' : 'rgba(255,255,255,0.3)', margin: 0 }}>{isOnline ? 'En línea' : formatLastSeen(lastSeenMap[contact.id])}</p>
                   </div>
                 </div>
               );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import api from '../services/api';
@@ -13,33 +13,44 @@ export default function Chat() {
 
   const [groups, setGroups] = useState([]);
   const [contacts, setContacts] = useState([]);
-  const [activeChat, setActiveChat] = useState(null); // { type: 'group'|'channel'|'dm', id, name, ... }
+  const [activeChat, setActiveChat] = useState(null);
   const [channels, setChannels] = useState([]);
   const [messages, setMessages] = useState([]);
   const [members, setMembers] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
 
-  // Load groups and contacts
+  // Keep a ref to activeChat so socket handlers always see the latest value
+  const activeChatRef = useRef(null);
+  useEffect(() => {
+    activeChatRef.current = activeChat;
+  }, [activeChat]);
+
+  // Load groups and contacts on mount
   useEffect(() => {
     api.get('/groups').then((res) => setGroups(res.data));
     api.get('/contacts').then((res) => setContacts(res.data));
   }, []);
 
-  // Join group rooms on socket connect
+  // Join group rooms when socket connects
   useEffect(() => {
     if (!socket || groups.length === 0) return;
     groups.forEach((g) => socket.emit('join_group', g.id));
   }, [socket, groups]);
 
-  // Load channels when group is selected
+  // Load channels + members when group/channel is selected
   useEffect(() => {
-    if (activeChat?.type === 'group') {
+    if (!activeChat) return;
+    if (activeChat.type === 'group') {
       api.get(`/groups/${activeChat.id}/channels`).then((res) => setChannels(res.data));
       api.get(`/groups/${activeChat.id}/members`).then((res) => setMembers(res.data));
+    } else if (activeChat.type === 'channel' && activeChat.groupId) {
+      api.get(`/groups/${activeChat.groupId}/members`).then((res) => setMembers(res.data));
+    } else {
+      setMembers([]);
     }
   }, [activeChat?.type, activeChat?.id]);
 
-  // Load messages when chat changes
+  // Load messages when active chat changes
   useEffect(() => {
     if (!activeChat) return;
     setMessages([]);
@@ -56,7 +67,18 @@ export default function Chat() {
     }
 
     if (endpoint) {
-      api.get(endpoint).then((res) => setMessages(res.data));
+      api.get(endpoint).then((res) => {
+        setMessages(res.data);
+        // Auto-mark unread messages as read
+        if (socket) {
+          const unreadIds = res.data
+            .filter((m) => m.sender_id !== user.id && m.status !== 'read')
+            .map((m) => m.id);
+          if (unreadIds.length > 0) {
+            socket.emit('mark_read', { message_ids: unreadIds });
+          }
+        }
+      });
     }
 
     return () => {
@@ -66,35 +88,40 @@ export default function Chat() {
     };
   }, [activeChat?.type, activeChat?.id]);
 
-  // Listen for new messages
+  // Socket event listeners
   useEffect(() => {
     if (!socket) return;
 
     const handleNewMessage = (message) => {
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === message.id)) return prev;
-        return [...prev, message];
-      });
+      const chat = activeChatRef.current;
 
-      // Update group last message
+      // Check if this message belongs to the current active chat
+      const belongsToActiveChat =
+        (chat?.type === 'group' && message.group_id === chat.id && !message.channel_id) ||
+        (chat?.type === 'channel' && message.channel_id === chat.id) ||
+        (chat?.type === 'dm' && (message.sender_id === chat.id || message.receiver_id === chat.id));
+
+      if (belongsToActiveChat) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === message.id)) return prev;
+          return [...prev, message];
+        });
+
+        // Auto-mark as read if the message is from someone else
+        if (message.sender_id !== user.id) {
+          socket.emit('mark_read', { message_ids: [message.id] });
+        }
+      }
+
+      // Always update sidebar last message for groups
       if (message.group_id) {
         setGroups((prev) =>
           prev.map((g) =>
-            g.id === message.group_id ? { ...g, last_message: message.content, last_message_at: message.created_at } : g
+            g.id === message.group_id
+              ? { ...g, last_message: message.content, last_message_at: message.created_at }
+              : g
           )
         );
-      }
-
-      // Mark as read if it's the active chat
-      if (message.sender_id !== user.id) {
-        const isActive =
-          (activeChat?.type === 'group' && message.group_id === activeChat.id && !message.channel_id) ||
-          (activeChat?.type === 'channel' && message.channel_id === activeChat.id) ||
-          (activeChat?.type === 'dm' && message.sender_id === activeChat.id);
-
-        if (isActive) {
-          socket.emit('mark_read', { message_ids: [message.id] });
-        }
       }
     };
 
@@ -113,24 +140,49 @@ export default function Chat() {
       setTypingUsers((prev) => prev.filter((t) => t.user_id !== user_id));
     };
 
-    const handleMessagesRead = ({ reader_id, message_ids }) => {
+    const handleMessagesRead = ({ message_ids }) => {
       setMessages((prev) =>
         prev.map((m) => (message_ids.includes(m.id) ? { ...m, status: 'read' } : m))
       );
+    };
+
+    const handleMessagesDelivered = ({ message_ids }) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          message_ids.includes(m.id) && m.status === 'sent' ? { ...m, status: 'delivered' } : m
+        )
+      );
+    };
+
+    const handleContactAdded = (contact) => {
+      setContacts((prev) => {
+        if (prev.some((c) => c.id === contact.id)) return prev;
+        return [...prev, contact];
+      });
+    };
+
+    const handleContactRemoved = ({ user_id }) => {
+      setContacts((prev) => prev.filter((c) => c.id !== user_id));
     };
 
     socket.on('new_message', handleNewMessage);
     socket.on('user_typing', handleTyping);
     socket.on('user_stop_typing', handleStopTyping);
     socket.on('messages_read', handleMessagesRead);
+    socket.on('messages_delivered', handleMessagesDelivered);
+    socket.on('contact_added', handleContactAdded);
+    socket.on('contact_removed', handleContactRemoved);
 
     return () => {
       socket.off('new_message', handleNewMessage);
       socket.off('user_typing', handleTyping);
       socket.off('user_stop_typing', handleStopTyping);
       socket.off('messages_read', handleMessagesRead);
+      socket.off('messages_delivered', handleMessagesDelivered);
+      socket.off('contact_added', handleContactAdded);
+      socket.off('contact_removed', handleContactRemoved);
     };
-  }, [socket, activeChat, user?.id]);
+  }, [socket, user?.id]);
 
   const sendMessage = useCallback(
     (content, messageType = 'text', fileUrl = null, fileName = null) => {
@@ -141,7 +193,6 @@ export default function Chat() {
         message_type: messageType,
         file_url: fileUrl,
         file_name: fileName,
-        tempId: Date.now(),
       };
 
       if (activeChat.type === 'group') {
@@ -162,11 +213,19 @@ export default function Chat() {
     const data = {};
     if (activeChat.type === 'group') data.group_id = activeChat.id;
     else if (activeChat.type === 'channel') data.channel_id = activeChat.id;
+    else if (activeChat.type === 'dm') data.receiver_id = activeChat.id;
     socket.emit('typing', data);
   }, [socket, activeChat]);
 
   const refreshGroups = () => {
     api.get('/groups').then((res) => setGroups(res.data));
+  };
+
+  const refreshMembers = () => {
+    const groupId = activeChat?.type === 'group' ? activeChat.id : activeChat?.groupId;
+    if (groupId) {
+      api.get(`/groups/${groupId}/members`).then((res) => setMembers(res.data));
+    }
   };
 
   return (
@@ -184,7 +243,7 @@ export default function Chat() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {activeChat ? (
           <>
-            <Header activeChat={activeChat} members={members} typingUsers={typingUsers} />
+            <Header activeChat={activeChat} members={members} typingUsers={typingUsers} onMembersChanged={refreshMembers} />
             <ChatView messages={messages} currentUser={user} />
             <MessageInput onSend={sendMessage} onTyping={handleTyping} />
           </>

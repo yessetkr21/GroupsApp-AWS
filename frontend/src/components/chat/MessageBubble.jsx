@@ -4,9 +4,17 @@ import { formatTime, getAvatarColor, getInitials } from '../../lib/utils';
 export default function MessageBubble({ message, isOwn }) {
   const statusIcon = () => {
     if (!isOwn) return null;
-    if (message.status === 'read') return <CheckCheck style={{ width: '14px', height: '14px', color: '#a78bfa' }} />;
-    if (message.status === 'delivered') return <CheckCheck style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.3)' }} />;
-    return <Check style={{ width: '14px', height: '14px', color: 'rgba(255,255,255,0.3)' }} />;
+
+    // Read = double blue checks
+    if (message.status === 'read') {
+      return <CheckCheck style={{ width: '16px', height: '16px', color: '#53bdeb' }} />;
+    }
+    // Delivered = double gray checks
+    if (message.status === 'delivered') {
+      return <CheckCheck style={{ width: '16px', height: '16px', color: '#8696a0' }} />;
+    }
+    // Sent = single gray check
+    return <Check style={{ width: '16px', height: '16px', color: '#8696a0' }} />;
   };
 
   const renderContent = () => {
@@ -82,7 +90,7 @@ export default function MessageBubble({ message, isOwn }) {
         >
           {renderContent()}
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', marginTop: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px', marginTop: '4px' }}>
             <span style={{ fontSize: '11px', color: isOwn ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.3)' }}>
               {formatTime(message.created_at)}
             </span>
