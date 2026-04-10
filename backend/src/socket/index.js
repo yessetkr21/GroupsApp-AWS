@@ -2,13 +2,18 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const { setupChatHandlers } = require('./chat');
 const { setupPresenceHandlers } = require('./presence');
+const logger = require('../config/logger');
 
 let ioInstance = null;
 
 function setupSocket(server) {
+  const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:5174,http://localhost')
+    .split(',')
+    .map(o => o.trim());
+
   const io = new Server(server, {
     cors: {
-      origin: ['http://localhost:5173', 'http://localhost:5174'],
+      origin: allowedOrigins,
       methods: ['GET', 'POST'],
     },
   });
@@ -31,13 +36,13 @@ function setupSocket(server) {
   });
 
   io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.user.username} (${socket.user.id})`);
+    logger.info(`User connected: ${socket.user.username}`, { user_id: socket.user.id });
 
     setupPresenceHandlers(io, socket);
     setupChatHandlers(io, socket);
 
     socket.on('disconnect', () => {
-      console.log(`User disconnected: ${socket.user.username}`);
+      logger.info(`User disconnected: ${socket.user.username}`, { user_id: socket.user.id });
     });
   });
 

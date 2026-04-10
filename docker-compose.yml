@@ -1,0 +1,202 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  GroupsApp — Arquitectura de Microservicios
+#
+#  Servicios:
+#    rabbitmq          → AMQP :5672 / Management :15672  (MOM)
+#    etcd              → :2379 (coordinación distribuida)
+#    redis             → :6379 (caché de mensajes y presencia)
+#    messages-service  → gRPC :50051  (historial de mensajes)
+#    groups-service    → gRPC :50052  (grupos, canales, contactos)
+#    backend           → REST/WS :3000 (api-gateway)
+#    frontend          → Nginx :80    (SPA)
+#
+#  Comunicación interna:
+#    browser ──HTTP──► frontend (Nginx)
+#                          │
+#                       proxy /api  /socket.io
+#                          │
+#                       backend (api-gateway) ──gRPC──► messages-service
+#                                             ──gRPC──► groups-service
+#                                             ──AMQP──► rabbitmq
+#
+#  messages-service ──AMQP──► rabbitmq  (consume message.sent events)
+#
+#  Datos externos (AWS):
+#    RDS MySQL · S3 · (sin contenedores locales de BD)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Redis (caché de mensajes y presencia) ──────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: groupsapp-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    networks:
+      - groupsapp-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  # ── RabbitMQ (MOM) ─────────────────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: groupsapp-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-groupsapp}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-groupsapp123}
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"      # AMQP
+      - "15672:15672"    # Management UI
+    networks:
+      - groupsapp-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ── etcd (coordinación distribuida) ───────────────────────────────────────
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.9
+    container_name: groupsapp-etcd
+    restart: unless-stopped
+    command:
+      - etcd
+      - --advertise-client-urls=http://etcd:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+    environment:
+      ALLOW_NONE_AUTHENTICATION: "yes"
+    ports:
+      - "2379:2379"
+    networks:
+      - groupsapp-net
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── messages-service (gRPC) ────────────────────────────────────────────────
+  messages-service:
+    build:
+      context: ./messages-service
+      dockerfile: Dockerfile
+    image: groupsapp-messages-service:latest
+    container_name: groupsapp-messages-service
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      MESSAGES_SERVICE_PORT: "50051"
+      RABBITMQ_URL: "amqp://${RABBITMQ_USER:-groupsapp}:${RABBITMQ_PASS:-groupsapp123}@rabbitmq:5672"
+    expose:
+      - "50051"
+    networks:
+      - groupsapp-net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('@grpc/grpc-js').credentials.createInsecure(); process.exit(0)\""]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ── groups-service (gRPC) ──────────────────────────────────────────────────
+  groups-service:
+    build:
+      context: ./groups-service
+      dockerfile: Dockerfile
+    image: groupsapp-groups-service:latest
+    container_name: groupsapp-groups-service
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      GROUPS_SERVICE_PORT: "50052"
+    expose:
+      - "50052"
+    networks:
+      - groupsapp-net
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('@grpc/grpc-js').credentials.createInsecure(); process.exit(0)\""]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── backend / api-gateway (REST + Socket.IO + AMQP publisher) ─────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: groupsapp-backend:latest
+    container_name: groupsapp-backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      MESSAGES_SERVICE_ADDR: "messages-service:50051"
+      GROUPS_SERVICE_ADDR:   "groups-service:50052"
+      RABBITMQ_URL: "amqp://${RABBITMQ_USER:-groupsapp}:${RABBITMQ_PASS:-groupsapp123}@rabbitmq:5672"
+      ETCD_HOSTS: "http://etcd:2379"
+      REDIS_URL: "redis://redis:6379"
+    ports:
+      - "3000:3000"
+    networks:
+      - groupsapp-net
+    depends_on:
+      messages-service:
+        condition: service_healthy
+      groups-service:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── frontend (Nginx SPA) ───────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: groupsapp-frontend:latest
+    container_name: groupsapp-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - groupsapp-net
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  groupsapp-net:
+    driver: bridge

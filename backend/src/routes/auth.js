@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../config/db');
 const auth = require('../middleware/auth');
+const logger = require('../config/logger');
 
 const router = express.Router();
 
@@ -41,7 +42,7 @@ router.post('/register', async (req, res) => {
       data: { token, user: { id, username, email } },
     });
   } catch (err) {
-    console.error('Register error:', err);
+    logger.error('Register error', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });
@@ -84,7 +85,7 @@ router.post('/login', async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Login error:', err);
+    logger.error('Login error', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });
@@ -101,7 +102,7 @@ router.get('/me', auth, async (req, res) => {
     }
     res.json({ success: true, data: users[0] });
   } catch (err) {
-    console.error('Me error:', err);
+    logger.error('Me error', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });

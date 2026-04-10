@@ -1,6 +1,10 @@
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../config/db');
 const { isUserOnline } = require('./presence');
+const rabbitmq = require('../config/rabbitmq');
+const logger = require('../config/logger');
+const { messagesSentTotal } = require('../config/metrics');
+const redis = require('../config/redis');
 
 function setupChatHandlers(io, socket) {
   // Join a group room
@@ -24,11 +28,17 @@ function setupChatHandlers(io, socket) {
   // Send message
   socket.on('send_message', async (data) => {
     try {
-      const { group_id, channel_id, receiver_id, content, message_type, file_url, file_name } = data;
+      let { group_id, channel_id, receiver_id, content, message_type, file_url, file_name } = data;
       const msgId = uuidv4();
       let status = 'sent';
 
       if (group_id || channel_id) {
+        // Bug fix: when only channel_id is sent (no group_id), look up group_id from DB
+        if (channel_id && !group_id) {
+          const [chRows] = await pool.query('SELECT group_id FROM channels WHERE id = ?', [channel_id]);
+          if (chRows.length > 0) group_id = chRows[0].group_id;
+        }
+
         // Group/channel message -> group_messages table
         await pool.query(
           `INSERT INTO group_messages (id, group_id, sender_id, content, file_url, file_name, file_type, message_type, channel_id, status)
@@ -93,9 +103,39 @@ function setupChatHandlers(io, socket) {
         // DM: emit to receiver's personal room AND sender's personal room
         io.to(`user:${receiver_id}`).emit('new_message', message);
         io.to(`user:${socket.user.id}`).emit('new_message', message);
+
+        // If already 'delivered', notify sender so UI updates the tick immediately
+        if (status === 'delivered') {
+          io.to(`user:${socket.user.id}`).emit('messages_delivered', { message_ids: [msgId] });
+        }
       }
+
+      // Invalidate Redis message cache so next fetch gets fresh data
+      if (channel_id) {
+        redis.invalidateCache(`channel:${channel_id}`);
+      } else if (group_id) {
+        redis.invalidateCache(`group:${group_id}`);
+      } else if (receiver_id) {
+        const dmKey = [socket.user.id, receiver_id].sort().join(':');
+        redis.invalidateCache(`dm:${dmKey}`);
+      }
+
+      // Publish to RabbitMQ (async, non-blocking)
+      rabbitmq.publishMessageSent(message);
+
+      // Update Prometheus counter
+      messagesSentTotal.inc({ type: message_type || 'text' });
+
+      logger.info('Message sent', {
+        id: msgId,
+        sender: socket.user.username,
+        type: message_type || 'text',
+        group_id: group_id || null,
+        channel_id: channel_id || null,
+        receiver_id: receiver_id || null,
+      });
     } catch (err) {
-      console.error('Send message error:', err);
+      logger.error('Send message error', { error: err.message });
       socket.emit('message_error', { error: 'Error al enviar mensaje', tempId: data.tempId });
     }
   });
@@ -171,15 +211,20 @@ function setupChatHandlers(io, socket) {
         ...(grpMsgs || []).map((m) => m.sender_id),
       ]);
 
+      const readPayload = {
+        reader_id: socket.user.id,
+        reader_username: socket.user.username,
+        message_ids,
+      };
+
       senderIds.forEach((senderId) => {
-        io.to(`user:${senderId}`).emit('messages_read', {
-          reader_id: socket.user.id,
-          reader_username: socket.user.username,
-          message_ids,
-        });
+        io.to(`user:${senderId}`).emit('messages_read', readPayload);
       });
+
+      // Publish read event to RabbitMQ
+      rabbitmq.publishMessageRead(readPayload);
     } catch (err) {
-      console.error('Mark read error:', err);
+      logger.error('Mark read error', { error: err.message });
     }
   });
 }

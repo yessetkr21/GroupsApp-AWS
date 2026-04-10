@@ -1,3 +1,4 @@
+const logger = require('../config/logger');
 const express = require('express');
 const { PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
@@ -40,7 +41,7 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Upload error:', err);
+    logger.error('Upload error:', { error: err.message });
     res.status(500).json({ success: false, error: 'Error al subir archivo' });
   }
 });
@@ -56,7 +57,7 @@ router.get('/signed-url/*', auth, async (req, res) => {
     );
     res.json({ success: true, data: { url } });
   } catch (err) {
-    console.error('Signed URL error:', err);
+    logger.error('Signed URL error:', { error: err.message });
     res.status(500).json({ success: false, error: 'Error al generar URL' });
   }
 });

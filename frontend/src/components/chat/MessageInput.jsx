@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Send, Paperclip, X } from 'lucide-react';
 import api from '../../services/api';
 
-export default function MessageInput({ onSend, onTyping }) {
+export default function MessageInput({ onSend, onTyping, onStopTyping }) {
   const [text, setText] = useState('');
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(null);
@@ -13,7 +13,9 @@ export default function MessageInput({ onSend, onTyping }) {
     setText(e.target.value);
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     onTyping();
-    typingTimeoutRef.current = setTimeout(() => {}, 3000);
+    typingTimeoutRef.current = setTimeout(() => {
+      onStopTyping?.();
+    }, 3000);
   };
 
   const handleSend = () => {

@@ -199,6 +199,7 @@ export default function Chat() {
         data.group_id = activeChat.id;
       } else if (activeChat.type === 'channel') {
         data.channel_id = activeChat.id;
+        if (activeChat.groupId) data.group_id = activeChat.groupId;
       } else if (activeChat.type === 'dm') {
         data.receiver_id = activeChat.id;
       }
@@ -215,6 +216,15 @@ export default function Chat() {
     else if (activeChat.type === 'channel') data.channel_id = activeChat.id;
     else if (activeChat.type === 'dm') data.receiver_id = activeChat.id;
     socket.emit('typing', data);
+  }, [socket, activeChat]);
+
+  const handleStopTyping = useCallback(() => {
+    if (!socket || !activeChat) return;
+    const data = {};
+    if (activeChat.type === 'group') data.group_id = activeChat.id;
+    else if (activeChat.type === 'channel') data.channel_id = activeChat.id;
+    else if (activeChat.type === 'dm') data.receiver_id = activeChat.id;
+    socket.emit('stop_typing', data);
   }, [socket, activeChat]);
 
   const refreshGroups = () => {
@@ -245,7 +255,7 @@ export default function Chat() {
           <>
             <Header activeChat={activeChat} members={members} typingUsers={typingUsers} onMembersChanged={refreshMembers} />
             <ChatView messages={messages} currentUser={user} />
-            <MessageInput onSend={sendMessage} onTyping={handleTyping} />
+            <MessageInput onSend={sendMessage} onTyping={handleTyping} onStopTyping={handleStopTyping} />
           </>
         ) : (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#09090f' }}>

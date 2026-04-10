@@ -1,22 +1,18 @@
+const logger = require('../config/logger');
 const express = require('express');
-const { v4: uuidv4 } = require('uuid');
-const pool = require('../config/db');
 const auth = require('../middleware/auth');
+const { groupsClient, call } = require('../grpc/clients');
 
 const router = express.Router();
 
 // GET /api/groups/:groupId/channels
 router.get('/:groupId/channels', auth, async (req, res) => {
   try {
-    const [channels] = await pool.query(
-      `SELECT c.*,
-        (SELECT content FROM group_messages WHERE channel_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message
-      FROM channels c WHERE c.group_id = ? ORDER BY c.created_at`,
-      [req.params.groupId]
-    );
-    res.json({ success: true, data: channels });
+    const result = await call(groupsClient, 'GetChannels', { group_id: req.params.groupId });
+    if (!result.success) return res.status(500).json({ success: false, error: result.error });
+    res.json({ success: true, data: result.channels });
   } catch (err) {
-    console.error('List channels error:', err);
+    logger.error('List channels error:', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });
@@ -25,22 +21,19 @@ router.get('/:groupId/channels', auth, async (req, res) => {
 router.post('/:groupId/channels', auth, async (req, res) => {
   try {
     const { name, description } = req.body;
-    if (!name) {
-      return res.status(400).json({ success: false, error: 'Nombre del canal requerido' });
-    }
-
-    const id = uuidv4();
-    await pool.query(
-      'INSERT INTO channels (id, group_id, name, description, created_by) VALUES (?, ?, ?, ?, ?)',
-      [id, req.params.groupId, name, description || null, req.user.id]
-    );
-
-    res.status(201).json({
-      success: true,
-      data: { id, group_id: req.params.groupId, name, description },
+    const result = await call(groupsClient, 'CreateChannel', {
+      group_id:    req.params.groupId,
+      name:        name        || '',
+      description: description || '',
+      user_id:     req.user.id,
     });
+    if (!result.success) {
+      const status = result.error.includes('requerido') ? 400 : 500;
+      return res.status(status).json({ success: false, error: result.error });
+    }
+    res.status(201).json({ success: true, data: result.channel });
   } catch (err) {
-    console.error('Create channel error:', err);
+    logger.error('Create channel error:', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });
@@ -48,21 +41,18 @@ router.post('/:groupId/channels', auth, async (req, res) => {
 // DELETE /api/groups/:groupId/channels/:channelId
 router.delete('/:groupId/channels/:channelId', auth, async (req, res) => {
   try {
-    const [membership] = await pool.query(
-      'SELECT role FROM group_members WHERE group_id = ? AND user_id = ?',
-      [req.params.groupId, req.user.id]
-    );
-    if (membership.length === 0 || membership[0].role !== 'admin') {
-      return res.status(403).json({ success: false, error: 'Solo el admin puede eliminar canales' });
+    const result = await call(groupsClient, 'DeleteChannel', {
+      group_id:   req.params.groupId,
+      channel_id: req.params.channelId,
+      user_id:    req.user.id,
+    });
+    if (!result.success) {
+      const status = result.error.includes('admin') ? 403 : 500;
+      return res.status(status).json({ success: false, error: result.error });
     }
-
-    await pool.query('DELETE FROM channels WHERE id = ? AND group_id = ?', [
-      req.params.channelId,
-      req.params.groupId,
-    ]);
-    res.json({ success: true, data: { message: 'Canal eliminado' } });
+    res.json({ success: true, data: { message: result.message } });
   } catch (err) {
-    console.error('Delete channel error:', err);
+    logger.error('Delete channel error:', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });

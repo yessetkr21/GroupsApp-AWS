@@ -1,7 +1,7 @@
+const logger = require('../config/logger');
 const express = require('express');
-const { v4: uuidv4 } = require('uuid');
-const pool = require('../config/db');
 const auth = require('../middleware/auth');
+const { groupsClient, call } = require('../grpc/clients');
 
 const router = express.Router();
 
@@ -9,35 +9,18 @@ const router = express.Router();
 router.post('/', auth, async (req, res) => {
   try {
     const { name, description } = req.body;
-    if (!name) {
-      return res.status(400).json({ success: false, error: 'Nombre del grupo requerido' });
-    }
-
-    const id = uuidv4();
-    await pool.query(
-      'INSERT INTO `groups` (id, name, description, created_by, join_mode) VALUES (?, ?, ?, ?, ?)',
-      [id, name, description || null, req.user.id, 'open']
-    );
-
-    // Creator becomes admin
-    await pool.query(
-      'INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, ?)',
-      [id, req.user.id, 'admin']
-    );
-
-    // Create default "general" channel
-    const channelId = uuidv4();
-    await pool.query(
-      'INSERT INTO channels (id, group_id, name, description, created_by) VALUES (?, ?, ?, ?, ?)',
-      [channelId, id, 'general', 'Canal general', req.user.id]
-    );
-
-    res.status(201).json({
-      success: true,
-      data: { id, name, description, created_by: req.user.id },
+    const result = await call(groupsClient, 'CreateGroup', {
+      name:        name || '',
+      description: description || '',
+      user_id:     req.user.id,
     });
+    if (!result.success) {
+      const status = result.error.includes('requerido') ? 400 : 500;
+      return res.status(status).json({ success: false, error: result.error });
+    }
+    res.status(201).json({ success: true, data: result.group });
   } catch (err) {
-    console.error('Create group error:', err);
+    logger.error('Create group error:', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });
@@ -45,19 +28,11 @@ router.post('/', auth, async (req, res) => {
 // GET /api/groups
 router.get('/', auth, async (req, res) => {
   try {
-    const [groups] = await pool.query(
-      `SELECT g.*, gm.role,
-        (SELECT COUNT(*) FROM group_members WHERE group_id = g.id) as member_count,
-        (SELECT content FROM group_messages WHERE group_id = g.id ORDER BY created_at DESC LIMIT 1) as last_message,
-        (SELECT created_at FROM group_messages WHERE group_id = g.id ORDER BY created_at DESC LIMIT 1) as last_message_at
-      FROM \`groups\` g
-      JOIN group_members gm ON g.id = gm.group_id AND gm.user_id = ?
-      ORDER BY last_message_at DESC, g.created_at DESC`,
-      [req.user.id]
-    );
-    res.json({ success: true, data: groups });
+    const result = await call(groupsClient, 'GetGroups', { user_id: req.user.id });
+    if (!result.success) return res.status(500).json({ success: false, error: result.error });
+    res.json({ success: true, data: result.groups });
   } catch (err) {
-    console.error('List groups error:', err);
+    logger.error('List groups error:', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });
@@ -65,18 +40,17 @@ router.get('/', auth, async (req, res) => {
 // GET /api/groups/:id
 router.get('/:id', auth, async (req, res) => {
   try {
-    const [groups] = await pool.query(
-      `SELECT g.*, gm.role FROM \`groups\` g
-      JOIN group_members gm ON g.id = gm.group_id AND gm.user_id = ?
-      WHERE g.id = ?`,
-      [req.user.id, req.params.id]
-    );
-    if (groups.length === 0) {
-      return res.status(404).json({ success: false, error: 'Grupo no encontrado' });
+    const result = await call(groupsClient, 'GetGroup', {
+      group_id: req.params.id,
+      user_id:  req.user.id,
+    });
+    if (!result.success) {
+      const status = result.error.includes('no encontrado') ? 404 : 500;
+      return res.status(status).json({ success: false, error: result.error });
     }
-    res.json({ success: true, data: groups[0] });
+    res.json({ success: true, data: result.group });
   } catch (err) {
-    console.error('Get group error:', err);
+    logger.error('Get group error:', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });
@@ -84,22 +58,20 @@ router.get('/:id', auth, async (req, res) => {
 // PUT /api/groups/:id
 router.put('/:id', auth, async (req, res) => {
   try {
-    const [membership] = await pool.query(
-      'SELECT role FROM group_members WHERE group_id = ? AND user_id = ?',
-      [req.params.id, req.user.id]
-    );
-    if (membership.length === 0 || membership[0].role !== 'admin') {
-      return res.status(403).json({ success: false, error: 'Solo el admin puede editar el grupo' });
-    }
-
     const { name, description } = req.body;
-    await pool.query(
-      'UPDATE `groups` SET name = COALESCE(?, name), description = COALESCE(?, description) WHERE id = ?',
-      [name, description, req.params.id]
-    );
-    res.json({ success: true, data: { message: 'Grupo actualizado' } });
+    const result = await call(groupsClient, 'UpdateGroup', {
+      group_id:    req.params.id,
+      user_id:     req.user.id,
+      name:        name || '',
+      description: description || '',
+    });
+    if (!result.success) {
+      const status = result.error.includes('admin') ? 403 : 500;
+      return res.status(status).json({ success: false, error: result.error });
+    }
+    res.json({ success: true, data: { message: result.message } });
   } catch (err) {
-    console.error('Update group error:', err);
+    logger.error('Update group error:', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });
@@ -107,18 +79,17 @@ router.put('/:id', auth, async (req, res) => {
 // DELETE /api/groups/:id
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const [membership] = await pool.query(
-      'SELECT role FROM group_members WHERE group_id = ? AND user_id = ?',
-      [req.params.id, req.user.id]
-    );
-    if (membership.length === 0 || membership[0].role !== 'admin') {
-      return res.status(403).json({ success: false, error: 'Solo el admin puede eliminar el grupo' });
+    const result = await call(groupsClient, 'DeleteGroup', {
+      group_id: req.params.id,
+      user_id:  req.user.id,
+    });
+    if (!result.success) {
+      const status = result.error.includes('admin') ? 403 : 500;
+      return res.status(status).json({ success: false, error: result.error });
     }
-
-    await pool.query('DELETE FROM `groups` WHERE id = ?', [req.params.id]);
-    res.json({ success: true, data: { message: 'Grupo eliminado' } });
+    res.json({ success: true, data: { message: result.message } });
   } catch (err) {
-    console.error('Delete group error:', err);
+    logger.error('Delete group error:', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });
@@ -126,17 +97,11 @@ router.delete('/:id', auth, async (req, res) => {
 // GET /api/groups/:id/members
 router.get('/:id/members', auth, async (req, res) => {
   try {
-    const [members] = await pool.query(
-      `SELECT u.id, u.name as username, u.email, u.profile_picture as avatar_url, u.is_online, u.last_seen, gm.role, gm.joined_at
-      FROM group_members gm
-      JOIN users u ON gm.user_id = u.id
-      WHERE gm.group_id = ?
-      ORDER BY gm.role DESC, u.name`,
-      [req.params.id]
-    );
-    res.json({ success: true, data: members });
+    const result = await call(groupsClient, 'GetMembers', { group_id: req.params.id });
+    if (!result.success) return res.status(500).json({ success: false, error: result.error });
+    res.json({ success: true, data: result.members });
   } catch (err) {
-    console.error('List members error:', err);
+    logger.error('List members error:', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });
@@ -144,36 +109,22 @@ router.get('/:id/members', auth, async (req, res) => {
 // POST /api/groups/:id/members
 router.post('/:id/members', auth, async (req, res) => {
   try {
-    const [membership] = await pool.query(
-      'SELECT role FROM group_members WHERE group_id = ? AND user_id = ?',
-      [req.params.id, req.user.id]
-    );
-    if (membership.length === 0 || membership[0].role !== 'admin') {
-      return res.status(403).json({ success: false, error: 'Solo el admin puede agregar miembros' });
-    }
-
     const { user_id, username } = req.body;
-    let targetUserId = user_id;
-
-    if (!targetUserId && username) {
-      const [users] = await pool.query('SELECT id FROM users WHERE name = ?', [username]);
-      if (users.length === 0) {
-        return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
-      }
-      targetUserId = users[0].id;
+    const result = await call(groupsClient, 'AddMember', {
+      group_id:        req.params.id,
+      user_id:         req.user.id,
+      target_user_id:  user_id   || '',
+      target_username: username  || '',
+    });
+    if (!result.success) {
+      const status = result.error.includes('admin') ? 403
+                   : result.error.includes('no encontrado') ? 404
+                   : result.error.includes('requerido') ? 400 : 500;
+      return res.status(status).json({ success: false, error: result.error });
     }
-
-    if (!targetUserId) {
-      return res.status(400).json({ success: false, error: 'user_id o username requerido' });
-    }
-
-    await pool.query(
-      'INSERT IGNORE INTO group_members (group_id, user_id, role) VALUES (?, ?, ?)',
-      [req.params.id, targetUserId, 'member']
-    );
-    res.status(201).json({ success: true, data: { message: 'Miembro agregado' } });
+    res.status(201).json({ success: true, data: { message: result.message } });
   } catch (err) {
-    console.error('Add member error:', err);
+    logger.error('Add member error:', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });
@@ -181,21 +132,18 @@ router.post('/:id/members', auth, async (req, res) => {
 // DELETE /api/groups/:id/members/:userId
 router.delete('/:id/members/:userId', auth, async (req, res) => {
   try {
-    const [membership] = await pool.query(
-      'SELECT role FROM group_members WHERE group_id = ? AND user_id = ?',
-      [req.params.id, req.user.id]
-    );
-    if (membership.length === 0 || membership[0].role !== 'admin') {
-      return res.status(403).json({ success: false, error: 'Solo el admin puede remover miembros' });
+    const result = await call(groupsClient, 'RemoveMember', {
+      group_id:       req.params.id,
+      user_id:        req.user.id,
+      target_user_id: req.params.userId,
+    });
+    if (!result.success) {
+      const status = result.error.includes('admin') ? 403 : 500;
+      return res.status(status).json({ success: false, error: result.error });
     }
-
-    await pool.query(
-      'DELETE FROM group_members WHERE group_id = ? AND user_id = ?',
-      [req.params.id, req.params.userId]
-    );
-    res.json({ success: true, data: { message: 'Miembro removido' } });
+    res.json({ success: true, data: { message: result.message } });
   } catch (err) {
-    console.error('Remove member error:', err);
+    logger.error('Remove member error:', { error: err.message });
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 });
