@@ -8,7 +8,7 @@ metadata:
   labels:
     app: messages-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: messages-service
@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: messages-service
-          image: groupsapp-messages-service:latest
+          image: 533267341242.dkr.ecr.us-east-1.amazonaws.com/groupsapp-messages-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 50051
@@ -77,18 +77,18 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: messages-service
-  minReplicas: 2
-  maxReplicas: 6
+  minReplicas: 1
+  maxReplicas: 2
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 60
+          averageUtilization: 80
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
-          averageUtilization: 70
+          averageUtilization: 80

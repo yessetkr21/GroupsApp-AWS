@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: redis
-          image: redis:7.2-alpine
+          image: 533267341242.dkr.ecr.us-east-1.amazonaws.com/groupsapp-redis:latest
           args:
             - redis-server
             - --maxmemory

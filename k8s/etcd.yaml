@@ -19,19 +19,20 @@ spec:
     spec:
       containers:
         - name: etcd
-          image: bitnami/etcd:3.5
+          image: 533267341242.dkr.ecr.us-east-1.amazonaws.com/groupsapp-etcd:latest
+          command:
+            - /usr/local/bin/etcd
+            - --listen-client-urls=http://0.0.0.0:2379
+            - --advertise-client-urls=http://etcd:2379
+            - --listen-peer-urls=http://0.0.0.0:2380
+            - --initial-cluster=default=http://etcd:2380
+            - --initial-advertise-peer-urls=http://etcd:2380
+            - --data-dir=/etcd-data
           ports:
             - containerPort: 2379
               name: client
             - containerPort: 2380
               name: peer
-          env:
-            - name: ALLOW_NONE_AUTHENTICATION
-              value: "yes"
-            - name: ETCD_ADVERTISE_CLIENT_URLS
-              value: "http://etcd:2379"
-            - name: ETCD_LISTEN_CLIENT_URLS
-              value: "http://0.0.0.0:2379"
           resources:
             requests:
               cpu: "50m"
@@ -41,12 +42,12 @@ spec:
               memory: "256Mi"
           readinessProbe:
             exec:
-              command: ["etcdctl", "endpoint", "health"]
+              command: ["etcdctl", "--endpoints=http://localhost:2379", "endpoint", "health"]
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             exec:
-              command: ["etcdctl", "endpoint", "health"]
+              command: ["etcdctl", "--endpoints=http://localhost:2379", "endpoint", "health"]
             initialDelaySeconds: 15
             periodSeconds: 20
 ---

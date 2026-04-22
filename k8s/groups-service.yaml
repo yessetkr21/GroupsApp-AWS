@@ -8,7 +8,7 @@ metadata:
   labels:
     app: groups-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: groups-service
@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: groups-service
-          image: groupsapp-groups-service:latest
+          image: 533267341242.dkr.ecr.us-east-1.amazonaws.com/groupsapp-groups-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 50052
@@ -77,18 +77,18 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: groups-service
-  minReplicas: 2
-  maxReplicas: 6
+  minReplicas: 1
+  maxReplicas: 2
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 60
+          averageUtilization: 80
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
-          averageUtilization: 70
+          averageUtilization: 80
