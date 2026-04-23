@@ -28,6 +28,35 @@
   box-sizing: border-box;
 }
 
+/* ── Theme variables ── */
+:root {
+  --bg-main: #09090f;
+  --bg-surface: #0f0f17;
+  --border: rgba(255,255,255,0.06);
+  --border-subtle: rgba(255,255,255,0.03);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255,255,255,0.4);
+  --text-dim: rgba(255,255,255,0.25);
+  --bubble-other: rgba(255,255,255,0.07);
+  --bubble-other-border: rgba(255,255,255,0.07);
+  --input-bg: rgba(255,255,255,0.05);
+  --hover-bg: rgba(255,255,255,0.03);
+}
+
+:root.theme-light {
+  --bg-main: #f0f2f5;
+  --bg-surface: #ffffff;
+  --border: rgba(0,0,0,0.09);
+  --border-subtle: rgba(0,0,0,0.05);
+  --text-primary: #111b21;
+  --text-secondary: rgba(0,0,0,0.5);
+  --text-dim: rgba(0,0,0,0.3);
+  --bubble-other: rgba(0,0,0,0.05);
+  --bubble-other-border: rgba(0,0,0,0.09);
+  --input-bg: rgba(0,0,0,0.05);
+  --hover-bg: rgba(0,0,0,0.04);
+}
+
 .typing-dot {
   width: 6px;
   height: 6px;
