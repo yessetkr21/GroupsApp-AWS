@@ -206,7 +206,7 @@ export default function Chat() {
         {activeChat ? (
           <>
             <Header activeChat={activeChat} members={members} typingUsers={typingUsers} />
-            <ChatView messages={messages} currentUser={user} onReact={handleReact} />
+            <ChatView messages={messages} currentUser={user} onReact={handleReact} typingUsers={typingUsers} />
             <MessageInput onSend={sendMessage} onTyping={handleTyping} />
           </>
         ) : (
