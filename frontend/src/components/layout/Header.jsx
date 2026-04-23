@@ -91,7 +91,7 @@ export default function Header({ activeChat, members, typingUsers, onMembersChan
 
   return (
     <>
-      <div style={{ background: '#0f0f17', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div
           style={{ width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontWeight: 700, fontSize: '13px', flexShrink: 0, backgroundColor: getAvatarColor(activeChat.name) }}
         >
@@ -139,7 +139,7 @@ export default function Header({ activeChat, members, typingUsers, onMembersChan
 
       {/* Members panel */}
       {showMembers && isGroupOrChannel && (
-        <div style={{ background: '#0f0f17', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '12px 16px', maxHeight: '320px', overflowY: 'auto' }}>
+        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '12px 16px', maxHeight: '320px', overflowY: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
             <span style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Miembros ({members.length})</span>
             <button

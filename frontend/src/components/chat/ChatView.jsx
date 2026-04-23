@@ -49,7 +49,7 @@ export default function ChatView({ messages, currentUser, typingUsers = [] }) {
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', background: '#09090f', display: 'flex', flexDirection: 'column' }}
+      style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', background: 'var(--bg-main)', display: 'flex', flexDirection: 'column' }}
     >
       {groupedMessages.length === 0 && (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

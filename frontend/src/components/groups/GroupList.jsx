@@ -27,10 +27,10 @@ export default function GroupList({ groups, activeChat, onSelect, unreadCounts =
               display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', cursor: 'pointer',
               background: isActive ? 'rgba(124,58,237,0.12)' : 'transparent',
               borderLeft: isActive ? '2px solid #7c3aed' : '2px solid transparent',
-              borderBottom: '1px solid rgba(255,255,255,0.03)',
+              borderBottom: '1px solid var(--border-subtle)',
               transition: 'all 0.15s',
             }}
-            onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+            onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'var(--hover-bg)'; }}
             onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
           >
             <div style={{ width: '42px', height: '42px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontWeight: 700, fontSize: '14px', flexShrink: 0, backgroundColor: getAvatarColor(group.name) }}>

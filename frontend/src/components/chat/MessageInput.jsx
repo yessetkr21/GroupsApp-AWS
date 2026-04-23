@@ -66,7 +66,7 @@ export default function MessageInput({ onSend, onTyping, onStopTyping }) {
   const canSend = !uploading && (text.trim().length > 0 || preview);
 
   return (
-    <div style={{ background: '#0f0f17', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '12px 16px' }}>
+    <div style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)', padding: '12px 16px' }}>
       {preview && (
         <div style={{ marginBottom: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           {preview.type === 'image' ? (

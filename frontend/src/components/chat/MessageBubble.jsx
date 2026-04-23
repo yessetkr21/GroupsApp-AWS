@@ -56,7 +56,7 @@ export default function MessageBubble({ message, isOwn }) {
     }
 
     return (
-      <p style={{ fontSize: '14px', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, color: isOwn ? '#ffffff' : 'rgba(255,255,255,0.9)' }}>
+      <p style={{ fontSize: '14px', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, color: isOwn ? '#ffffff' : 'var(--text-primary)' }}>
         {message.content}
       </p>
     );
@@ -83,8 +83,8 @@ export default function MessageBubble({ message, isOwn }) {
             borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
             background: isOwn
               ? 'linear-gradient(135deg, #7c3aed, #6d28d9)'
-              : 'rgba(255,255,255,0.07)',
-            border: isOwn ? 'none' : '1px solid rgba(255,255,255,0.07)',
+              : 'var(--bubble-other)',
+            border: isOwn ? 'none' : '1px solid var(--bubble-other-border)',
             boxShadow: isOwn ? '0 2px 12px rgba(124,58,237,0.25)' : 'none',
           }}
         >

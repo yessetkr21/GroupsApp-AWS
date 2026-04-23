@@ -254,7 +254,7 @@ export default function Chat() {
   };
 
   return (
-    <div style={{ height: '100vh', display: 'flex', background: '#09090f', overflow: 'hidden' }}>
+    <div style={{ height: '100vh', display: 'flex', background: 'var(--bg-main)', overflow: 'hidden' }}>
       <Sidebar
         groups={groups}
         contacts={contacts}
@@ -274,7 +274,7 @@ export default function Chat() {
             <MessageInput onSend={sendMessage} onTyping={handleTyping} onStopTyping={handleStopTyping} />
           </>
         ) : (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#09090f' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-main)' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

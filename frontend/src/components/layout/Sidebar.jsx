@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import { useTheme } from '../../context/ThemeContext';
 import GroupList from '../groups/GroupList';
 import GroupCreate from '../groups/GroupCreate';
 import ChannelList from '../groups/ChannelList';
-import { MessageCircle, Users, UserPlus, LogOut, Plus, Search, ArrowLeft, Hash } from 'lucide-react';
+import { MessageCircle, Users, UserPlus, LogOut, Plus, Search, ArrowLeft, Sun, Moon } from 'lucide-react';
 import api from '../../services/api';
 import { getInitials, getAvatarColor, formatLastSeen } from '../../lib/utils';
 
 export default function Sidebar({ groups, contacts, activeChat, setActiveChat, onGroupCreated, channels, setContacts, unreadCounts = {} }) {
   const { user, logout } = useAuth();
   const { onlineUsers, lastSeenMap } = useSocket();
+  const { isDark, toggleTheme } = useTheme();
   const [tab, setTab] = useState('groups');
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showAddContact, setShowAddContact] = useState(false);
@@ -64,10 +66,10 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
   const filteredContacts = contacts.filter((c) => c.username.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div style={{ width: '340px', minWidth: '340px', background: '#0f0f17', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ width: '340px', minWidth: '340px', background: 'var(--bg-surface)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', height: '100%' }}>
 
       {/* Header */}
-      <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(124,58,237,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <MessageCircle style={{ width: '16px', height: '16px', color: '#a78bfa' }} />
@@ -76,20 +78,29 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
         </div>
         <div style={{ display: 'flex', gap: '4px' }}>
           <button
+            onClick={toggleTheme}
+            style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', transition: 'all 0.15s' }}
+            title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+          >
+            {isDark ? <Sun style={{ width: '16px', height: '16px' }} /> : <Moon style={{ width: '16px', height: '16px' }} />}
+          </button>
+          <button
             onClick={() => setShowCreateGroup(true)}
-            style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', transition: 'all 0.15s' }}
+            style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', transition: 'all 0.15s' }}
             title="Crear grupo"
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#ffffff'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--hover-bg)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
           >
             <Plus style={{ width: '16px', height: '16px' }} />
           </button>
           <button
             onClick={logout}
-            style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', transition: 'all 0.15s' }}
+            style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', transition: 'all 0.15s' }}
             title="Cerrar sesión"
             onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#f87171'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
           >
             <LogOut style={{ width: '16px', height: '16px' }} />
           </button>
@@ -97,7 +108,7 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
       </div>
 
       {/* User info */}
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div
           style={{ width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '13px', fontWeight: 700, flexShrink: 0, backgroundColor: getAvatarColor(user?.username || '') }}
         >
@@ -111,7 +122,7 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
       </div>
 
       {/* Search */}
-      <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--border-subtle)' }}>
         <div style={{ position: 'relative' }}>
           <Search style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: '14px', height: '14px', color: 'rgba(255,255,255,0.25)' }} />
           <input
@@ -125,7 +136,7 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
         {[
           { key: 'groups', label: 'Grupos', icon: <Users style={{ width: '14px', height: '14px' }} /> },
           { key: 'contacts', label: 'Contactos', icon: <MessageCircle style={{ width: '14px', height: '14px' }} /> },
@@ -218,7 +229,7 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
                     borderLeft: isActive ? '2px solid #7c3aed' : '2px solid transparent',
                     transition: 'all 0.15s',
                   }}
-                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'var(--hover-bg)'; }}
                   onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
                 >
                   <div style={{ position: 'relative', flexShrink: 0 }}>
