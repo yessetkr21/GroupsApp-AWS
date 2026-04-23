@@ -18,12 +18,22 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [members, setMembers] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
+  const [unreadCounts, setUnreadCounts] = useState({});
 
   // Keep a ref to activeChat so socket handlers always see the latest value
   const activeChatRef = useRef(null);
   useEffect(() => {
     activeChatRef.current = activeChat;
   }, [activeChat]);
+
+  // Limpiar contador de no leídos al abrir un chat
+  useEffect(() => {
+    if (!activeChat) return;
+    const key = activeChat.type === 'dm' ? `dm-${activeChat.id}`
+      : activeChat.type === 'channel' ? `channel-${activeChat.id}`
+      : `group-${activeChat.id}`;
+    setUnreadCounts((prev) => { const next = { ...prev }; delete next[key]; return next; });
+  }, [activeChat?.type, activeChat?.id]);
 
   // Load groups and contacts on mount
   useEffect(() => {
@@ -111,6 +121,11 @@ export default function Chat() {
         if (message.sender_id !== user.id) {
           socket.emit('mark_read', { message_ids: [message.id] });
         }
+      } else if (message.sender_id !== user.id) {
+        const key = message.channel_id ? `channel-${message.channel_id}`
+          : message.group_id ? `group-${message.group_id}`
+          : `dm-${message.sender_id}`;
+        setUnreadCounts((prev) => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
       }
 
       // Always update sidebar last message for groups
@@ -248,6 +263,7 @@ export default function Chat() {
         onGroupCreated={refreshGroups}
         channels={channels}
         setContacts={setContacts}
+        unreadCounts={unreadCounts}
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
