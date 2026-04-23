@@ -22,7 +22,16 @@ export default function Header({ activeChat, members, typingUsers, onMembersChan
   const getSubtitle = () => {
     if (typingUsers.length > 0) {
       const names = typingUsers.map((t) => t.username).join(', ');
-      return <span style={{ color: '#a78bfa' }}>{names} escribiendo...</span>;
+      return (
+        <span style={{ color: '#a78bfa', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+          <span style={{ display: 'inline-flex', gap: '3px', alignItems: 'center' }}>
+            <span className="typing-dot" style={{ animationDelay: '0ms', width: '4px', height: '4px' }} />
+            <span className="typing-dot" style={{ animationDelay: '160ms', width: '4px', height: '4px' }} />
+            <span className="typing-dot" style={{ animationDelay: '320ms', width: '4px', height: '4px' }} />
+          </span>
+          {names} escribiendo
+        </span>
+      );
     }
     if (activeChat.type === 'dm') {
       const isOnline = onlineUsers.has(activeChat.id);
