@@ -8,7 +8,7 @@ import { MessageCircle, Users, UserPlus, LogOut, Plus, Search, ArrowLeft, Hash }
 import api from '../../services/api';
 import { getInitials, getAvatarColor, formatLastSeen } from '../../lib/utils';
 
-export default function Sidebar({ groups, contacts, activeChat, setActiveChat, onGroupCreated, channels, setContacts }) {
+export default function Sidebar({ groups, contacts, activeChat, setActiveChat, onGroupCreated, channels, setContacts, unreadCounts = {} }) {
   const { user, logout } = useAuth();
   const { onlineUsers, lastSeenMap } = useSocket();
   const [tab, setTab] = useState('groups');
@@ -149,7 +149,7 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
       {/* Content */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {tab === 'groups' && !selectedGroup && (
-          <GroupList groups={filteredGroups} activeChat={activeChat} onSelect={handleSelectGroup} />
+          <GroupList groups={filteredGroups} activeChat={activeChat} onSelect={handleSelectGroup} unreadCounts={unreadCounts} />
         )}
 
         {tab === 'groups' && selectedGroup && (
@@ -207,6 +207,7 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
             {filteredContacts.map((contact) => {
               const isActive = activeChat?.type === 'dm' && activeChat?.id === contact.id;
               const isOnline = onlineUsers.has(contact.id);
+              const unread = unreadCounts[`dm-${contact.id}`] || 0;
               return (
                 <div
                   key={contact.id}
@@ -227,9 +228,14 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
                     <span style={{ position: 'absolute', bottom: '1px', right: '1px', width: '10px', height: '10px', borderRadius: '50%', background: isOnline ? '#22c55e' : '#4b5563', border: '2px solid #0f0f17' }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontWeight: 500, fontSize: '14px', color: '#ffffff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{contact.username}</p>
+                    <p style={{ fontWeight: unread ? 600 : 500, fontSize: '14px', color: '#ffffff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{contact.username}</p>
                     <p style={{ fontSize: '12px', color: isOnline ? '#22c55e' : 'rgba(255,255,255,0.3)', margin: 0 }}>{isOnline ? 'En línea' : formatLastSeen(lastSeenMap[contact.id])}</p>
                   </div>
+                  {unread > 0 && (
+                    <span style={{ minWidth: '18px', height: '18px', borderRadius: '9px', background: '#7c3aed', color: '#fff', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', flexShrink: 0 }}>
+                      {unread > 99 ? '99+' : unread}
+                    </span>
+                  )}
                 </div>
               );
             })}

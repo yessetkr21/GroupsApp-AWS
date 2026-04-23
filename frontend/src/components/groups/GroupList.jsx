@@ -1,7 +1,7 @@
 import { getInitials, getAvatarColor, formatTime } from '../../lib/utils';
 import { Users } from 'lucide-react';
 
-export default function GroupList({ groups, activeChat, onSelect }) {
+export default function GroupList({ groups, activeChat, onSelect, unreadCounts = {} }) {
   if (groups.length === 0) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 16px', textAlign: 'center' }}>
@@ -18,6 +18,7 @@ export default function GroupList({ groups, activeChat, onSelect }) {
     <div>
       {groups.map((group) => {
         const isActive = activeChat?.type === 'group' && activeChat?.id === group.id;
+        const unread = unreadCounts[`group-${group.id}`] || 0;
         return (
           <div
             key={group.id}
@@ -37,12 +38,19 @@ export default function GroupList({ groups, activeChat, onSelect }) {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-                <p style={{ fontWeight: 600, fontSize: '14px', color: '#ffffff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{group.name}</p>
-                {group.last_message_at && (
-                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', flexShrink: 0, marginLeft: '8px' }}>{formatTime(group.last_message_at)}</span>
-                )}
+                <p style={{ fontWeight: 600, fontSize: '14px', color: unread ? '#ffffff' : '#ffffff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{group.name}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, marginLeft: '8px' }}>
+                  {group.last_message_at && (
+                    <span style={{ fontSize: '11px', color: unread ? '#a78bfa' : 'rgba(255,255,255,0.25)' }}>{formatTime(group.last_message_at)}</span>
+                  )}
+                  {unread > 0 && (
+                    <span style={{ minWidth: '18px', height: '18px', borderRadius: '9px', background: '#7c3aed', color: '#fff', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>
+                      {unread > 99 ? '99+' : unread}
+                    </span>
+                  )}
+                </div>
               </div>
-              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <p style={{ fontSize: '12px', color: unread ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.3)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: unread ? 500 : 400 }}>
                 {group.last_message || 'Sin mensajes aún'}
               </p>
             </div>
