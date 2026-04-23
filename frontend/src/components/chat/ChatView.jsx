@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
+import TypingIndicator from './TypingIndicator';
 import { formatDate } from '../../lib/utils';
 
-export default function ChatView({ messages, currentUser }) {
+export default function ChatView({ messages, currentUser, typingUsers = [] }) {
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -52,6 +53,7 @@ export default function ChatView({ messages, currentUser }) {
         return <MessageBubble key={msg.id || `temp-${i}`} message={msg} isOwn={isOwn} />;
       })}
 
+      <TypingIndicator typingUsers={typingUsers} />
       <div ref={bottomRef} />
     </div>
   );
