@@ -5,6 +5,7 @@ const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const logger = require('./config/logger');
 const etcd = require('./config/etcd');
+const { startMetricsServer } = require('./config/metrics');
 
 const groupHandlers   = require('./handlers/groups');
 const contactHandlers = require('./handlers/contacts');
@@ -56,6 +57,9 @@ function main() {
     }
     logger.info(`gRPC server running on port ${port}`);
   });
+
+  startMetricsServer(9092);
+  logger.info('Metrics server listening on :9092/metrics');
 
   // Register in etcd for service discovery (non-blocking)
   etcd.register().catch((err) => {

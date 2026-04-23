@@ -5,7 +5,7 @@ RUN apk add --no-cache dumb-init
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 COPY src/ ./src/
 COPY proto/ ./proto/

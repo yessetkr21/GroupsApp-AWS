@@ -7,6 +7,7 @@ const { getGroupMessages, getChannelMessages, getDirectMessages } = require('./h
 const rabbitmq = require('./config/rabbitmq');
 const etcd = require('./config/etcd');
 const logger = require('./config/logger');
+const { startMetricsServer } = require('./config/metrics');
 
 const PROTO_PATH = path.join(__dirname, '../proto/messages.proto');
 
@@ -39,6 +40,9 @@ function main() {
     }
     logger.info(`gRPC server running on port ${port}`);
   });
+
+  startMetricsServer(9091);
+  logger.info('Metrics server listening on :9091/metrics');
 
   // Connect to RabbitMQ (non-blocking)
   rabbitmq.connect().catch((err) => {

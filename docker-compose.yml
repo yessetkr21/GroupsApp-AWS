@@ -102,6 +102,8 @@ services:
       NODE_ENV: production
       MESSAGES_SERVICE_PORT: "50051"
       RABBITMQ_URL: "amqp://${RABBITMQ_USER:-groupsapp}:${RABBITMQ_PASS:-groupsapp123}@rabbitmq:5672"
+    ports:
+      - "9091:9091"
     expose:
       - "50051"
     networks:
@@ -128,6 +130,8 @@ services:
     environment:
       NODE_ENV: production
       GROUPS_SERVICE_PORT: "50052"
+    ports:
+      - "9092:9092"
     expose:
       - "50052"
     networks:

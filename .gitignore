@@ -4,5 +4,6 @@ node_modules/
 .DS_Store
 *.log
 CLAUDE.md
+TODO.md
 .claude/
 logs/
