@@ -6,6 +6,8 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { setupSocket } = require('./socket');
 const logger = require('./config/logger');
 const rabbitmq = require('./config/rabbitmq');
@@ -29,8 +31,18 @@ const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http:
   .split(',')
   .map(o => o.trim());
 app.use(cors({ origin: allowedOrigins }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Rate limit on auth endpoints (brute-force protection)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Demasiadas solicitudes, intenta más tarde' },
+});
 
 // HTTP request duration + logging middleware
 app.use((req, res, next) => {
@@ -45,7 +57,7 @@ app.use((req, res, next) => {
 });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/groups', channelRoutes);
 app.use('/api/messages', messageRoutes);
