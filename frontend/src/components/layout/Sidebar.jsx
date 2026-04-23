@@ -115,8 +115,8 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
           {getInitials(user?.username || '?')}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontWeight: 600, fontSize: '13px', color: '#ffffff', margin: 0, lineHeight: 1.3 }}>{user?.username}</p>
-          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
+          <p style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)', margin: 0, lineHeight: 1.3 }}>{user?.username}</p>
+          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
         </div>
         <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', flexShrink: 0 }} />
       </div>
@@ -124,13 +124,13 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
       {/* Search */}
       <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--border-subtle)' }}>
         <div style={{ position: 'relative' }}>
-          <Search style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: '14px', height: '14px', color: 'rgba(255,255,255,0.25)' }} />
+          <Search style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: '14px', height: '14px', color: 'var(--text-dim)' }} />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar..."
-            style={{ width: '100%', padding: '8px 12px 8px 32px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: '#ffffff', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '8px 12px 8px 32px', background: 'var(--input-bg)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
       </div>
@@ -147,7 +147,7 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
             style={{
               flex: 1, padding: '10px', background: 'transparent', border: 'none', cursor: 'pointer',
               fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-              color: tab === key ? '#a78bfa' : 'rgba(255,255,255,0.35)',
+              color: tab === key ? '#a78bfa' : 'var(--text-secondary)',
               borderBottom: tab === key ? '2px solid #7c3aed' : '2px solid transparent',
               transition: 'all 0.15s',
             }}
@@ -167,7 +167,7 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
           <div>
             <button
               onClick={() => { setSelectedGroup(null); setActiveChat({ type: 'group', id: selectedGroup.id, name: selectedGroup.name }); }}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#a78bfa', fontSize: '13px', width: '100%', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#a78bfa', fontSize: '13px', width: '100%', borderBottom: '1px solid var(--border)' }}
             >
               <ArrowLeft style={{ width: '14px', height: '14px' }} />
               Volver a grupos
@@ -180,20 +180,20 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
           <div>
             <button
               onClick={() => setShowAddContact(!showAddContact)}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#a78bfa', fontSize: '13px', width: '100%', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#a78bfa', fontSize: '13px', width: '100%', borderBottom: '1px solid var(--border)' }}
             >
               <UserPlus style={{ width: '14px', height: '14px' }} />
               Agregar contacto
             </button>
 
             {showAddContact && (
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--hover-bg)' }}>
                 <input
                   type="text"
                   value={contactSearch}
                   onChange={(e) => handleSearchContacts(e.target.value)}
                   placeholder="Buscar por username o email..."
-                  style={{ width: '100%', padding: '8px 12px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#ffffff', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '8px 12px', background: 'var(--input-bg)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
                   autoFocus
                 />
                 {searchResults.map((u) => (
@@ -202,7 +202,7 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
                       <div style={{ width: '30px', height: '30px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '11px', fontWeight: 700, backgroundColor: getAvatarColor(u.username) }}>
                         {getInitials(u.username)}
                       </div>
-                      <span style={{ fontSize: '13px', color: '#ffffff' }}>{u.username}</span>
+                      <span style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{u.username}</span>
                     </div>
                     <button
                       onClick={() => handleAddContact(u.username)}
@@ -239,8 +239,8 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
                     <span style={{ position: 'absolute', bottom: '1px', right: '1px', width: '10px', height: '10px', borderRadius: '50%', background: isOnline ? '#22c55e' : '#4b5563', border: '2px solid #0f0f17' }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontWeight: unread ? 600 : 500, fontSize: '14px', color: '#ffffff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{contact.username}</p>
-                    <p style={{ fontSize: '12px', color: isOnline ? '#22c55e' : 'rgba(255,255,255,0.3)', margin: 0 }}>{isOnline ? 'En línea' : formatLastSeen(lastSeenMap[contact.id])}</p>
+                    <p style={{ fontWeight: unread ? 600 : 500, fontSize: '14px', color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{contact.username}</p>
+                    <p style={{ fontSize: '12px', color: isOnline ? '#22c55e' : 'var(--text-dim)', margin: 0 }}>{isOnline ? 'En línea' : formatLastSeen(lastSeenMap[contact.id])}</p>
                   </div>
                   {unread > 0 && (
                     <span style={{ minWidth: '18px', height: '18px', borderRadius: '9px', background: '#7c3aed', color: '#fff', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', flexShrink: 0 }}>

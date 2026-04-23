@@ -68,7 +68,7 @@ export default function MessageInput({ onSend, onTyping, onStopTyping }) {
   return (
     <div style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)', padding: '12px 16px' }}>
       {preview && (
-        <div style={{ marginBottom: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ marginBottom: '8px', background: 'var(--hover-bg)', border: '1px solid var(--border)', borderRadius: '10px', padding: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           {preview.type === 'image' ? (
             <img src={preview.url} alt="Preview" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '6px' }} />
           ) : (
@@ -77,10 +77,10 @@ export default function MessageInput({ onSend, onTyping, onStopTyping }) {
             </div>
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: '13px', fontWeight: 500, color: '#ffffff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{preview.file.name}</p>
-            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', margin: 0 }}>{(preview.file.size / 1024).toFixed(1)} KB</p>
+            <p style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{preview.file.name}</p>
+            <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>{(preview.file.size / 1024).toFixed(1)} KB</p>
           </div>
-          <button onClick={clearPreview} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.35)', padding: '4px', display: 'flex' }}>
+          <button onClick={clearPreview} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '4px', display: 'flex' }}>
             <X style={{ width: '16px', height: '16px' }} />
           </button>
         </div>
@@ -89,19 +89,19 @@ export default function MessageInput({ onSend, onTyping, onStopTyping }) {
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
         <button
           onClick={() => fileInputRef.current?.click()}
-          style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', flexShrink: 0, transition: 'all 0.15s' }}
+          style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'var(--input-bg)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', flexShrink: 0, transition: 'all 0.15s' }}
           title="Adjuntar archivo"
           onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(124,58,237,0.15)'; e.currentTarget.style.color = '#a78bfa'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--input-bg)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
         >
           <Paperclip style={{ width: '16px', height: '16px' }} />
         </button>
 
         <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={handleFileSelect} accept="image/*,.pdf,.doc,.docx,.txt,.zip,.rar" />
 
-        <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', transition: 'border-color 0.15s' }}
+        <div style={{ flex: 1, background: 'var(--input-bg)', border: '1px solid var(--border)', borderRadius: '12px', transition: 'border-color 0.15s' }}
           onFocusCapture={(e) => e.currentTarget.style.borderColor = 'rgba(124,58,237,0.4)'}
-          onBlurCapture={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+          onBlurCapture={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
         >
           <textarea
             value={text}
@@ -109,7 +109,7 @@ export default function MessageInput({ onSend, onTyping, onStopTyping }) {
             onKeyDown={handleKeyDown}
             placeholder="Escribe un mensaje..."
             rows={1}
-            style={{ width: '100%', padding: '10px 14px', background: 'transparent', border: 'none', color: '#ffffff', fontSize: '14px', resize: 'none', maxHeight: '120px', outline: 'none', boxSizing: 'border-box', lineHeight: 1.5, fontFamily: 'inherit' }}
+            style={{ width: '100%', padding: '10px 14px', background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '14px', resize: 'none', maxHeight: '120px', outline: 'none', boxSizing: 'border-box', lineHeight: 1.5, fontFamily: 'inherit' }}
           />
         </div>
 
@@ -118,8 +118,8 @@ export default function MessageInput({ onSend, onTyping, onStopTyping }) {
           disabled={!canSend}
           style={{
             width: '38px', height: '38px', borderRadius: '10px', border: 'none', cursor: canSend ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s',
-            background: canSend ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : 'rgba(255,255,255,0.06)',
-            color: canSend ? '#ffffff' : 'rgba(255,255,255,0.2)',
+            background: canSend ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : 'var(--input-bg)',
+            color: canSend ? '#ffffff' : 'var(--text-dim)',
             boxShadow: canSend ? '0 4px 12px rgba(124,58,237,0.35)' : 'none',
           }}
         >
@@ -130,7 +130,7 @@ export default function MessageInput({ onSend, onTyping, onStopTyping }) {
         </button>
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } } textarea::placeholder { color: rgba(255,255,255,0.25) !important; }`}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

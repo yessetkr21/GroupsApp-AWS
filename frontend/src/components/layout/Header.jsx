@@ -101,7 +101,7 @@ export default function Header({ activeChat, members, typingUsers, onMembersChan
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {getIcon()}
-            <h2 style={{ fontWeight: 600, fontSize: '15px', color: '#ffffff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChat.name}</h2>
+            <h2 style={{ fontWeight: 600, fontSize: '15px', color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChat.name}</h2>
           </div>
           <p style={{ fontSize: '12px', margin: '2px 0 0 0', lineHeight: 1 }}>{getSubtitle()}</p>
         </div>
@@ -109,7 +109,7 @@ export default function Header({ activeChat, members, typingUsers, onMembersChan
         {isGroupOrChannel && (
           <button
             onClick={() => setShowMembers(!showMembers)}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: showMembers ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: showMembers ? '#a78bfa' : 'rgba(255,255,255,0.5)', fontSize: '12px', cursor: 'pointer', transition: 'all 0.15s' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: showMembers ? 'rgba(124,58,237,0.2)' : 'var(--input-bg)', border: '1px solid var(--border)', borderRadius: '8px', color: showMembers ? '#a78bfa' : 'var(--text-secondary)', fontSize: '12px', cursor: 'pointer', transition: 'all 0.15s' }}
           >
             <Users style={{ width: '14px', height: '14px' }} />
             {members.length}
@@ -141,7 +141,7 @@ export default function Header({ activeChat, members, typingUsers, onMembersChan
       {showMembers && isGroupOrChannel && (
         <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '12px 16px', maxHeight: '320px', overflowY: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Miembros ({members.length})</span>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>Miembros ({members.length})</span>
             <button
               onClick={() => setShowAddMember(!showAddMember)}
               style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 10px', background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: '6px', color: '#a78bfa', fontSize: '12px', cursor: 'pointer' }}
@@ -152,15 +152,15 @@ export default function Header({ activeChat, members, typingUsers, onMembersChan
           </div>
 
           {showAddMember && (
-            <div style={{ marginBottom: '10px', padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ marginBottom: '10px', padding: '10px', background: 'var(--hover-bg)', borderRadius: '8px', border: '1px solid var(--border)' }}>
               <div style={{ position: 'relative', marginBottom: '8px' }}>
-                <Search style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', width: '13px', height: '13px', color: 'rgba(255,255,255,0.25)' }} />
+                <Search style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', width: '13px', height: '13px', color: 'var(--text-dim)' }} />
                 <input
                   type="text"
                   value={memberSearch}
                   onChange={(e) => handleSearchUsers(e.target.value)}
                   placeholder="Buscar usuario..."
-                  style={{ width: '100%', padding: '7px 10px 7px 28px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#ffffff', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '7px 10px 7px 28px', background: 'var(--input-bg)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
                   autoFocus
                 />
               </div>
@@ -168,10 +168,10 @@ export default function Header({ activeChat, members, typingUsers, onMembersChan
               {searchResults.map((u) => (
                 <div key={u.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '9px', fontWeight: 700, backgroundColor: getAvatarColor(u.username) }}>
+                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontSize: '9px', fontWeight: 700, backgroundColor: getAvatarColor(u.username) }}>
                       {getInitials(u.username)}
                     </div>
-                    <span style={{ fontSize: '12px', color: '#fff' }}>{u.username}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{u.username}</span>
                   </div>
                   <button
                     onClick={() => handleAddMember(u.id)}
@@ -189,19 +189,19 @@ export default function Header({ activeChat, members, typingUsers, onMembersChan
             return (
               <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 0' }}>
                 <div style={{ position: 'relative', flexShrink: 0 }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '11px', fontWeight: 700, backgroundColor: getAvatarColor(m.username) }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontSize: '11px', fontWeight: 700, backgroundColor: getAvatarColor(m.username) }}>
                     {getInitials(m.username)}
                   </div>
                   <span style={{ position: 'absolute', bottom: '0px', right: '0px', width: '8px', height: '8px', borderRadius: '50%', background: isOnline ? '#22c55e' : '#4b5563', border: '1.5px solid #0f0f17' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '13px', color: '#fff', fontWeight: 500 }}>{m.username}</span>
+                    <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>{m.username}</span>
                     {m.role === 'admin' && (
                       <span style={{ fontSize: '9px', padding: '1px 6px', background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: '10px', color: '#a78bfa', fontWeight: 600 }}>Admin</span>
                     )}
                   </div>
-                  <span style={{ fontSize: '11px', color: isOnline ? '#22c55e' : 'rgba(255,255,255,0.3)' }}>
+                  <span style={{ fontSize: '11px', color: isOnline ? '#22c55e' : 'var(--text-dim)' }}>
                     {isOnline ? 'En línea' : formatLastSeen(m.last_seen)}
                   </span>
                 </div>

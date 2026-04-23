@@ -38,7 +38,7 @@ export default function GroupList({ groups, activeChat, onSelect, unreadCounts =
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-                <p style={{ fontWeight: 600, fontSize: '14px', color: unread ? '#ffffff' : '#ffffff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{group.name}</p>
+                <p style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{group.name}</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, marginLeft: '8px' }}>
                   {group.last_message_at && (
                     <span style={{ fontSize: '11px', color: unread ? '#a78bfa' : 'rgba(255,255,255,0.25)' }}>{formatTime(group.last_message_at)}</span>
@@ -50,7 +50,7 @@ export default function GroupList({ groups, activeChat, onSelect, unreadCounts =
                   )}
                 </div>
               </div>
-              <p style={{ fontSize: '12px', color: unread ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.3)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: unread ? 500 : 400 }}>
+              <p style={{ fontSize: '12px', color: unread ? 'var(--text-secondary)' : 'var(--text-dim)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: unread ? 500 : 400 }}>
                 {group.last_message || 'Sin mensajes aún'}
               </p>
             </div>
