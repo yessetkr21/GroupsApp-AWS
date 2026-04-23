@@ -254,7 +254,7 @@ export default function Chat() {
         {activeChat ? (
           <>
             <Header activeChat={activeChat} members={members} typingUsers={typingUsers} onMembersChanged={refreshMembers} />
-            <ChatView messages={messages} currentUser={user} />
+            <ChatView messages={messages} currentUser={user} typingUsers={typingUsers} />
             <MessageInput onSend={sendMessage} onTyping={handleTyping} onStopTyping={handleStopTyping} />
           </>
         ) : (
