@@ -1,14 +1,36 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
 import { formatDate } from '../../lib/utils';
 
 export default function ChatView({ messages, currentUser, typingUsers = [] }) {
   const bottomRef = useRef(null);
+  const containerRef = useRef(null);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+
+  const isNearBottom = () => {
+    const el = containerRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  };
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (isNearBottom()) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      setShowScrollBtn(true);
+    }
   }, [messages]);
+
+  const handleScroll = () => {
+    setShowScrollBtn(!isNearBottom());
+  };
+
+  const scrollToBottom = () => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setShowScrollBtn(false);
+  };
 
   const groupedMessages = [];
   let lastDate = '';
@@ -23,7 +45,10 @@ export default function ChatView({ messages, currentUser, typingUsers = [] }) {
   });
 
   return (
+    <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
     <div
+      ref={containerRef}
+      onScroll={handleScroll}
       style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', background: '#09090f', display: 'flex', flexDirection: 'column' }}
     >
       {groupedMessages.length === 0 && (
@@ -55,6 +80,28 @@ export default function ChatView({ messages, currentUser, typingUsers = [] }) {
 
       <TypingIndicator typingUsers={typingUsers} />
       <div ref={bottomRef} />
+    </div>
+
+    {showScrollBtn && (
+      <button
+        onClick={scrollToBottom}
+        style={{
+          position: 'absolute', bottom: '16px', right: '20px',
+          width: '36px', height: '36px', borderRadius: '50%',
+          background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+          border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 16px rgba(124,58,237,0.5)',
+          transition: 'transform 0.15s',
+          zIndex: 10,
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+        title="Ir al último mensaje"
+      >
+        <ChevronDown style={{ width: '18px', height: '18px', color: '#ffffff' }} />
+      </button>
+    )}
     </div>
   );
 }
