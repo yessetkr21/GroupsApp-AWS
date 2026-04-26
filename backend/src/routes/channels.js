@@ -1,72 +1,61 @@
-const logger = require('../config/logger');
 const express = require('express');
 const auth = require('../middleware/auth');
-const pool = require('../config/db');
-const { v4: uuidv4 } = require('uuid');
+const logger = require('../config/logger');
+const { groupsClient, call } = require('../grpc/clients');
 
 const router = express.Router();
+
+function grpcStatus(err) {
+  const e = (err || '').toLowerCase();
+  if (e.includes('no encontrado') || e.includes('not found')) return 404;
+  if (e.includes('admin') || e.includes('solo admin')) return 403;
+  if (e.includes('requerido') || e.includes('required')) return 400;
+  return 500;
+}
 
 // GET /api/groups/:groupId/channels
 router.get('/:groupId/channels', auth, async (req, res) => {
   try {
-    const [channels] = await pool.execute(
-      'SELECT * FROM channels WHERE group_id = ? ORDER BY created_at ASC',
-      [req.params.groupId]
-    );
-    res.json({ success: true, data: channels });
+    const result = await call(groupsClient, 'getChannels', { group_id: req.params.groupId });
+    if (!result.success) return res.status(500).json({ success: false, error: result.error });
+    res.json({ success: true, data: result.channels });
   } catch (err) {
-    logger.error('List channels error:', { error: err.message });
-    res.status(500).json({ success: false, error: 'Error del servidor' });
+    logger.error('getChannels gRPC error:', { error: err.message });
+    res.status(503).json({ success: false, error: 'Servicio no disponible' });
   }
 });
 
 // POST /api/groups/:groupId/channels
 router.post('/:groupId/channels', auth, async (req, res) => {
   try {
-    const [[member]] = await pool.execute(
-      'SELECT role FROM group_members WHERE group_id = ? AND user_id = ?',
-      [req.params.groupId, req.user.id]
-    );
-    if (!member || member.role !== 'admin') return res.status(403).json({ success: false, error: 'Solo admin puede crear canales' });
-
     const { name, description } = req.body;
-    if (!name?.trim()) return res.status(400).json({ success: false, error: 'Nombre requerido' });
-
-    const channelId = uuidv4();
-    await pool.execute(
-      'INSERT INTO channels (id, group_id, name, description, created_by) VALUES (?, ?, ?, ?, ?)',
-      [channelId, req.params.groupId, name.trim(), description || '', req.user.id]
-    );
-    const [[channel]] = await pool.execute('SELECT * FROM channels WHERE id = ?', [channelId]);
-    res.status(201).json({ success: true, data: channel });
+    const result = await call(groupsClient, 'createChannel', {
+      group_id: req.params.groupId,
+      name: name || '',
+      description: description || '',
+      user_id: req.user.id,
+    });
+    if (!result.success) return res.status(grpcStatus(result.error)).json({ success: false, error: result.error });
+    res.status(201).json({ success: true, data: result.channel });
   } catch (err) {
-    logger.error('Create channel error:', { error: err.message });
-    res.status(500).json({ success: false, error: 'Error del servidor' });
+    logger.error('createChannel gRPC error:', { error: err.message });
+    res.status(503).json({ success: false, error: 'Servicio no disponible' });
   }
 });
 
 // DELETE /api/groups/:groupId/channels/:channelId
 router.delete('/:groupId/channels/:channelId', auth, async (req, res) => {
-  const conn = await pool.getConnection();
   try {
-    const [[member]] = await conn.execute(
-      'SELECT role FROM group_members WHERE group_id = ? AND user_id = ?',
-      [req.params.groupId, req.user.id]
-    );
-    if (!member || member.role !== 'admin') return res.status(403).json({ success: false, error: 'Solo admin puede eliminar canales' });
-
-    await conn.beginTransaction();
-    await conn.execute('DELETE FROM group_messages WHERE channel_id = ?', [req.params.channelId]);
-    await conn.execute('DELETE FROM channels WHERE id = ? AND group_id = ?', [req.params.channelId, req.params.groupId]);
-    await conn.commit();
-
-    res.json({ success: true, data: { message: 'Canal eliminado' } });
+    const result = await call(groupsClient, 'deleteChannel', {
+      group_id: req.params.groupId,
+      channel_id: req.params.channelId,
+      user_id: req.user.id,
+    });
+    if (!result.success) return res.status(grpcStatus(result.error)).json({ success: false, error: result.error });
+    res.json({ success: true, data: { message: result.message } });
   } catch (err) {
-    await conn.rollback();
-    logger.error('Delete channel error:', { error: err.message });
-    res.status(500).json({ success: false, error: 'Error del servidor' });
-  } finally {
-    conn.release();
+    logger.error('deleteChannel gRPC error:', { error: err.message });
+    res.status(503).json({ success: false, error: 'Servicio no disponible' });
   }
 });
 
