@@ -8,7 +8,7 @@ Aplicacion tipo WhatsApp / Telegram construida sobre microservicios contenerizad
 
 Node.js · React · Kubernetes (EKS) · MySQL · RabbitMQ · Redis
 
-**Curso:** ST0263 Topicos Especiales en Telematica / SI3007 Sistemas Distribuidos — 2026-1
+**Curso:** Topicos Especiales en Telematica / Sistemas Distribuidos — 2026-1
 
 **Integrantes:** Camilo Sanchez Salinas · Samuel Santamaria · Yessetk Rodriguez
 
