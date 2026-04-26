@@ -98,41 +98,6 @@ Microservicios desplegados en AWS EC2, con datos en RDS MySQL + S3.
 - Docker + Docker Compose
 - Node 20+ (solo si corres fuera de Docker)
 
-### Variables de Entorno
-
-Crea `.env` en la raíz del proyecto:
-
-```env
-# Base de datos
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=groupsapp
-DB_PASSWORD=groupsapp123
-DB_NAME=groupsapp
-
-# JWT
-JWT_SECRET=cambia-esto-en-produccion
-
-# AWS (solo necesarias fuera de EC2 con IAM role)
-AWS_REGION=us-east-1
-S3_BUCKET_NAME=tu-bucket
-
-# Backend
-PORT=3000
-NODE_ENV=production
-LOG_LEVEL=info
-CORS_ORIGINS=http://localhost,http://localhost:80
-
-# Internal
-MESSAGES_SERVICE_ADDR=messages-service:50051
-GROUPS_SERVICE_ADDR=groups-service:50052
-REDIS_URL=redis://redis:6379
-RABBITMQ_URL=amqp://groupsapp:groupsapp123@rabbitmq:5672
-RABBITMQ_USER=groupsapp
-RABBITMQ_PASS=groupsapp123
-ETCD_HOSTS=http://etcd:2379
-```
-
 ### Levantar todo
 
 ```bash
