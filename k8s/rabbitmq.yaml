@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: rabbitmq
-          image: 533267341242.dkr.ecr.us-east-1.amazonaws.com/groupsapp-rabbitmq:latest
+          image: rabbitmq:3-management
           ports:
             - containerPort: 5672
               name: amqp

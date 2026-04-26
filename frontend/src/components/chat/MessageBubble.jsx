@@ -1,19 +1,14 @@
-import { Check, CheckCheck, File } from 'lucide-react';
+import { useState } from 'react';
+import { Check, CheckCheck, File, Trash2 } from 'lucide-react';
 import { formatTime, getAvatarColor, getInitials } from '../../lib/utils';
 
-export default function MessageBubble({ message, isOwn }) {
+export default function MessageBubble({ message, isOwn, onDelete }) {
+  const [hovered, setHovered] = useState(false);
+
   const statusIcon = () => {
     if (!isOwn) return null;
-
-    // Read = double blue checks
-    if (message.status === 'read') {
-      return <CheckCheck style={{ width: '16px', height: '16px', color: '#53bdeb' }} />;
-    }
-    // Delivered = double gray checks
-    if (message.status === 'delivered') {
-      return <CheckCheck style={{ width: '16px', height: '16px', color: '#8696a0' }} />;
-    }
-    // Sent = single gray check
+    if (message.status === 'read') return <CheckCheck style={{ width: '16px', height: '16px', color: '#53bdeb' }} />;
+    if (message.status === 'delivered') return <CheckCheck style={{ width: '16px', height: '16px', color: '#8696a0' }} />;
     return <Check style={{ width: '16px', height: '16px', color: '#8696a0' }} />;
   };
 
@@ -63,14 +58,18 @@ export default function MessageBubble({ message, isOwn }) {
   };
 
   return (
-    <div style={{ display: 'flex', marginBottom: '4px', justifyContent: isOwn ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: '8px' }}>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ display: 'flex', marginBottom: '4px', justifyContent: isOwn ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: '8px', position: 'relative' }}
+    >
       {!isOwn && (
         <div style={{ width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '10px', fontWeight: 700, flexShrink: 0, marginBottom: '2px', backgroundColor: getAvatarColor(message.sender_username || '') }}>
           {getInitials(message.sender_username || '?')}
         </div>
       )}
 
-      <div style={{ maxWidth: '62%' }}>
+      <div style={{ maxWidth: '62%', position: 'relative' }}>
         {!isOwn && message.sender_username && (
           <p style={{ fontSize: '11px', fontWeight: 600, marginBottom: '3px', marginLeft: '2px', color: getAvatarColor(message.sender_username) }}>
             {message.sender_username}
@@ -81,15 +80,12 @@ export default function MessageBubble({ message, isOwn }) {
           style={{
             padding: '8px 12px',
             borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-            background: isOwn
-              ? 'linear-gradient(135deg, #7c3aed, #6d28d9)'
-              : 'var(--bubble-other)',
+            background: isOwn ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : 'var(--bubble-other)',
             border: isOwn ? 'none' : '1px solid var(--bubble-other-border)',
             boxShadow: isOwn ? '0 2px 12px rgba(124,58,237,0.25)' : 'none',
           }}
         >
           {renderContent()}
-
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px', marginTop: '4px' }}>
             <span style={{ fontSize: '11px', color: isOwn ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.3)' }}>
               {formatTime(message.created_at)}
@@ -98,6 +94,16 @@ export default function MessageBubble({ message, isOwn }) {
           </div>
         </div>
       </div>
+
+      {isOwn && hovered && onDelete && (
+        <button
+          onClick={() => onDelete(message.id)}
+          style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: '6px', padding: '4px 6px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'rgba(255,100,100,0.8)', flexShrink: 0, alignSelf: 'center' }}
+          title="Eliminar mensaje"
+        >
+          <Trash2 style={{ width: '13px', height: '13px' }} />
+        </button>
+      )}
     </div>
   );
 }

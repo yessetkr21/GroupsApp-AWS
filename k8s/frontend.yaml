@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: 533267341242.dkr.ecr.us-east-1.amazonaws.com/groupsapp-frontend:latest
+          image: 533267358025.dkr.ecr.us-east-1.amazonaws.com/groupsapp-frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80

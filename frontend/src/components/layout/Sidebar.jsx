@@ -9,7 +9,7 @@ import { MessageCircle, Users, UserPlus, LogOut, Plus, Search, ArrowLeft, Sun, M
 import api from '../../services/api';
 import { getInitials, getAvatarColor, formatLastSeen } from '../../lib/utils';
 
-export default function Sidebar({ groups, contacts, activeChat, setActiveChat, onGroupCreated, channels, setContacts, unreadCounts = {} }) {
+export default function Sidebar({ groups, contacts, activeChat, setActiveChat, onGroupCreated, onDeleteGroup, channels, setContacts, unreadCounts = {} }) {
   const { user, logout } = useAuth();
   const { onlineUsers, lastSeenMap } = useSocket();
   const { isDark, toggleTheme } = useTheme();
@@ -160,7 +160,7 @@ export default function Sidebar({ groups, contacts, activeChat, setActiveChat, o
       {/* Content */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {tab === 'groups' && !selectedGroup && (
-          <GroupList groups={filteredGroups} activeChat={activeChat} onSelect={handleSelectGroup} unreadCounts={unreadCounts} />
+          <GroupList groups={filteredGroups} activeChat={activeChat} onSelect={handleSelectGroup} onDelete={onDeleteGroup} unreadCounts={unreadCounts} />
         )}
 
         {tab === 'groups' && selectedGroup && (

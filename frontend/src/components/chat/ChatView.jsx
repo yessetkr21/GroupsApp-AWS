@@ -4,7 +4,7 @@ import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
 import { formatDate } from '../../lib/utils';
 
-export default function ChatView({ messages, currentUser, typingUsers = [] }) {
+export default function ChatView({ messages, currentUser, typingUsers = [], onDeleteMessage }) {
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
@@ -75,7 +75,7 @@ export default function ChatView({ messages, currentUser, typingUsers = [] }) {
 
         const msg = item.data;
         const isOwn = msg.sender_id === currentUser?.id;
-        return <MessageBubble key={msg.id || `temp-${i}`} message={msg} isOwn={isOwn} />;
+        return <MessageBubble key={msg.id || `temp-${i}`} message={msg} isOwn={isOwn} onDelete={onDeleteMessage} />;
       })}
 
       <TypingIndicator typingUsers={typingUsers} />

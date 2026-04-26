@@ -246,6 +246,29 @@ export default function Chat() {
     api.get('/groups').then((res) => setGroups(res.data));
   };
 
+  const handleDeleteGroup = useCallback(async (groupId) => {
+    try {
+      await api.delete(`/groups/${groupId}`);
+      setGroups((prev) => prev.filter((g) => g.id !== groupId));
+      if (activeChat?.type === 'group' && activeChat?.id === groupId) {
+        setActiveChat(null);
+        setMessages([]);
+        setChannels([]);
+      }
+    } catch (err) {
+      console.error('Delete group error:', err);
+    }
+  }, [activeChat]);
+
+  const handleDeleteMessage = useCallback(async (messageId) => {
+    try {
+      await api.delete(`/messages/${messageId}`);
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    } catch (err) {
+      console.error('Delete message error:', err);
+    }
+  }, []);
+
   const refreshMembers = () => {
     const groupId = activeChat?.type === 'group' ? activeChat.id : activeChat?.groupId;
     if (groupId) {
@@ -261,6 +284,7 @@ export default function Chat() {
         activeChat={activeChat}
         setActiveChat={setActiveChat}
         onGroupCreated={refreshGroups}
+        onDeleteGroup={handleDeleteGroup}
         channels={channels}
         setContacts={setContacts}
         unreadCounts={unreadCounts}
@@ -270,7 +294,7 @@ export default function Chat() {
         {activeChat ? (
           <>
             <Header activeChat={activeChat} members={members} typingUsers={typingUsers} onMembersChanged={refreshMembers} />
-            <ChatView messages={messages} currentUser={user} typingUsers={typingUsers} />
+            <ChatView messages={messages} currentUser={user} typingUsers={typingUsers} onDeleteMessage={handleDeleteMessage} />
             <MessageInput onSend={sendMessage} onTyping={handleTyping} onStopTyping={handleStopTyping} />
           </>
         ) : (

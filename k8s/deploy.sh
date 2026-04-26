@@ -12,7 +12,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-REGISTRY="${REGISTRY:-533267341242.dkr.ecr.us-east-1.amazonaws.com}"
+REGISTRY="${REGISTRY:-533267358025.dkr.ecr.us-east-1.amazonaws.com}"
 TAG="${TAG:-latest}"
 NAMESPACE="groupsapp"
 

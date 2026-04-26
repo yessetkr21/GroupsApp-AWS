@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: 533267341242.dkr.ecr.us-east-1.amazonaws.com/groupsapp-backend:latest
+          image: 533267358025.dkr.ecr.us-east-1.amazonaws.com/groupsapp-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
