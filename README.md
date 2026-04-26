@@ -1,47 +1,87 @@
+<div align="center">
+
 # GroupsApp
 
-Sistema de mensajeria instantanea distribuido similar a WhatsApp/Telegram. Proyecto academico para **Topicos Especiales en Telematica /  Sistemas Distribuidos (2026-1)**.
+### Sistema de mensajeria instantanea distribuido
 
-## Integrantes
+Aplicacion tipo WhatsApp / Telegram construida sobre microservicios contenerizados en **AWS EKS**, con comunicacion REST, WebSocket, gRPC y RabbitMQ.
 
-- Camilo Sanchez Salinas
-- Samuel Santamaria
-- Yessetk Rodriguez
+Node.js · React · Kubernetes (EKS) · MySQL · RabbitMQ · Redis
+
+**Curso:** ST0263 Topicos Especiales en Telematica / SI3007 Sistemas Distribuidos — 2026-1
+
+**Integrantes:** Camilo Sanchez Salinas · Samuel Santamaria · Yessetk Rodriguez
+
+</div>
+
+---
+
+## Capturas del Proyecto
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="img/frontend.png" alt="Pantalla de login" width="480"/>
+      <br/>
+      <sub><b>Autenticacion — pantalla de login</b></sub>
+    </td>
+    <td align="center">
+      <img src="img/frontend-chats.png" alt="Vista de mensajes directos y contactos" width="480"/>
+      <br/>
+      <sub><b>Mensajes directos con presencia online y envio de archivos</b></sub>
+    </td>
+  </tr>
+</table>
+
+</div>
 
 ---
 
 ## Arquitectura
 
-Microservicios contenerizados en Kubernetes (AWS EKS), con base de datos en RDS MySQL y almacenamiento de archivos en S3.
-
 ```
-Internet
-    |
-AWS ELB (LoadBalancer)
-    |
- [frontend :80]  (React SPA + Nginx)
-    |
-    | /api  /socket.io
-    v
- [backend :3000]  (Express + Socket.IO)
-    |         |         |
-    v         v         v
- [RabbitMQ] [Redis]  [RDS MySQL]
-              |
-    +---------+---------+
-    |                   |
+                        Internet
+                            |
+                  AWS Elastic Load Balancer
+                            |
+              +-------------+-------------+
+              |                           |
+       [frontend :80]             [backend :3000]
+        React + Nginx               Express + Socket.IO
+                                          |
+                +-------------------------+-------------------------+
+                |                         |                         |
+          [RabbitMQ]                  [Redis]                 [RDS MySQL]
+           AMQP broker              cache / presencia         datos principales
+                |
+        +-------+-------+
+        |               |
  [messages-service]  [groups-service]
     :50051 gRPC          :50052 gRPC
     AMQP consumer        AMQP consumer
-              |
-            [S3]
+                                |
+                              [S3]
+                        archivos / imagenes
 ```
 
-### Servicios en EKS
+### Stack tecnologico
+
+| Capa | Tecnologia |
+|---|---|
+| Frontend | React 18, Vite, TailwindCSS, shadcn/ui, Socket.IO |
+| Backend | Node.js, Express, Socket.IO, gRPC, amqplib |
+| Base de datos | MySQL 8 (AWS RDS), Redis 7 |
+| Infraestructura | Docker, Kubernetes (AWS EKS), Nginx, Prometheus |
+| Almacenamiento | AWS S3 |
+| Autenticacion | JWT + bcrypt |
+
+### Servicios desplegados en EKS
 
 | Servicio | Stack | Puerto | Rol |
 |---|---|---|---|
-| `frontend` | React 18 + Vite + Nginx | 80 | SPA |
+| `frontend` | React + Nginx | 80 | SPA |
 | `backend` | Node.js + Express + Socket.IO | 3000 | API REST, WebSocket, AMQP publisher |
 | `messages-service` | Node.js + gRPC | 50051 | Historial mensajes, AMQP consumer |
 | `groups-service` | Node.js + gRPC | 50052 | Grupos, canales, miembros |
@@ -53,20 +93,25 @@ AWS ELB (LoadBalancer)
 | Canal | Protocolo | Uso |
 |---|---|---|
 | Cliente <-> Backend | REST HTTP | Operaciones CRUD |
-| Cliente <-> Backend | WebSocket (Socket.IO) | Mensajeria tiempo real |
-| Backend <-> Microservicios | gRPC | Operaciones internas |
-| Backend -> RabbitMQ | AMQP | Publicar evento `message.sent` |
-| RabbitMQ -> Microservicios | AMQP | Consumir y persistir mensajes |
+| Cliente <-> Backend | WebSocket (Socket.IO) | Mensajeria en tiempo real |
+| Backend <-> Microservicios | gRPC | Consultas internas |
+| Backend -> RabbitMQ | AMQP publish | Evento `message.sent` |
+| RabbitMQ -> Microservicios | AMQP consume | Persistir mensajes en DB |
 
-### Infraestructura AWS
+---
 
-| Recurso | Tipo | Uso |
-|---|---|---|
-| EKS | Cluster K8s (2x t3.medium) | Orquestacion contenedores |
-| RDS MySQL | `db.t3.micro` | Base de datos principal |
-| S3 | Bucket `groupsapp-files-*` | Archivos e imagenes |
-| ECR | Registry | Imagenes Docker |
-| ELB | LoadBalancer | Punto de entrada publico |
+## Funcionalidades
+
+- Registro y login con JWT + bcrypt
+- Grupos con roles admin / member y modos de suscripcion (open, request, invite)
+- Canales dentro de grupos
+- Mensajeria grupal (grupo/canal) y directa (DM)
+- Presencia online/offline en tiempo real via Redis
+- Envio de archivos e imagenes almacenados en S3
+- Historial persistente de mensajes
+- Gestion de contactos
+- Eliminacion de grupos y mensajes propios
+- Alta disponibilidad: 2 replicas de backend con HPA
 
 ---
 
@@ -74,28 +119,118 @@ AWS ELB (LoadBalancer)
 
 ```sql
 users           -- id, username, email, password_hash, profile_picture, is_online, last_seen
-groups          -- id, name, description, avatar_url, created_by, is_public
+groups          -- id, name, description, created_by, join_mode, is_public
 group_members   -- group_id, user_id, role (admin|member), joined_at
 channels        -- id, group_id, name, description, created_by
-group_messages  -- id, sender_id, group_id, channel_id, content, message_type, file_url, created_at
-direct_messages -- id, sender_id, receiver_id, content, message_type, file_url, created_at
-contacts        -- id, user_id, contact_user_id, created_at
+group_messages  -- id, sender_id, group_id, channel_id, content, message_type, file_url
+messages        -- id, sender_id, receiver_id, content, message_type, file_url  (DMs)
+contacts        -- id, user_id, contact_user_id
 message_reads   -- message_id, user_id, read_at
 ```
 
 ---
 
-## Funcionalidades
+## API REST
 
-- Registro y login con JWT + bcrypt
-- Grupos con roles admin / member
-- Canales dentro de grupos
-- Mensajeria grupal (grupo/canal) y directa (DM)
-- Presencia online/offline en tiempo real
-- Envio de archivos e imagenes (S3)
-- Historial persistente
-- Contactos entre usuarios
-- Eliminacion de grupos y mensajes propios
+Prefijo `/api/`. Autenticacion: `Authorization: Bearer <token>`.
+
+Formato de respuesta:
+```json
+{ "success": true,  "data": { ... } }
+{ "success": false, "error": "descripcion del error" }
+```
+
+| Metodo | Endpoint | Auth | Descripcion |
+|---|---|---|---|
+| POST | `/api/auth/register` | No | Registro |
+| POST | `/api/auth/login` | No | Login — retorna JWT |
+| GET | `/api/auth/me` | Si | Perfil actual |
+| GET | `/api/groups` | Si | Mis grupos |
+| POST | `/api/groups` | Si | Crear grupo |
+| GET | `/api/groups/:id` | Si | Detalle de grupo |
+| DELETE | `/api/groups/:id` | Si | Eliminar grupo (admin) |
+| POST | `/api/groups/:id/members` | Si | Agregar miembro |
+| DELETE | `/api/groups/:id/members/:userId` | Si | Remover miembro |
+| GET | `/api/groups/:id/channels` | Si | Canales del grupo |
+| POST | `/api/groups/:id/channels` | Si | Crear canal |
+| DELETE | `/api/groups/:id/channels/:channelId` | Si | Eliminar canal |
+| GET | `/api/messages/group/:id` | Si | Historial grupal |
+| GET | `/api/messages/direct/:userId` | Si | Historial DM |
+| DELETE | `/api/messages/:id` | Si | Eliminar mensaje propio |
+| GET | `/api/contacts` | Si | Mis contactos |
+| POST | `/api/contacts` | Si | Agregar contacto |
+| DELETE | `/api/contacts/:id` | Si | Eliminar contacto |
+| POST | `/api/files/upload` | Si | Subir archivo a S3 |
+| GET | `/api/files/signed-url/*` | Si | URL firmada S3 |
+| GET | `/api/health` | No | Healthcheck |
+| GET | `/metrics` | No | Metricas Prometheus |
+
+---
+
+## WebSocket (Socket.IO)
+
+```js
+const socket = io(BACKEND_URL, { auth: { token } })
+```
+
+| Evento (cliente -> servidor) | Descripcion |
+|---|---|
+| `join_group` | Suscribirse a sala de grupo |
+| `join_channel` | Suscribirse a sala de canal |
+| `send_message` | Enviar mensaje grupal |
+| `send_direct` | Enviar mensaje directo |
+| `typing` | Indicador de escritura |
+
+| Evento (servidor -> cliente) | Descripcion |
+|---|---|
+| `new_message` | Nuevo mensaje en grupo/canal |
+| `new_direct_message` | Nuevo DM recibido |
+| `message_deleted` | Mensaje eliminado |
+| `user_online` / `user_offline` | Cambio de presencia |
+
+---
+
+## Infraestructura AWS
+
+| Recurso | Configuracion | Rol |
+|---|---|---|
+| EKS | Cluster K8s, 2x t3.medium, auto-scaling 2-4 | Orquestacion |
+| RDS MySQL | db.t3.micro, Single-AZ | Base de datos |
+| S3 | Bucket privado + presigned URLs | Archivos |
+| ECR | 4 repositorios | Registry de imagenes |
+| ELB | LoadBalancer por servicio | Acceso publico |
+
+### Despliegue EKS
+
+```bash
+# Crear cluster
+eksctl create cluster -f eks-cluster.yaml
+
+# Addons de red
+aws eks create-addon --cluster-name groupsapp-cluster --addon-name vpc-cni --region us-east-1
+aws eks create-addon --cluster-name groupsapp-cluster --addon-name kube-proxy --region us-east-1
+aws eks create-addon --cluster-name groupsapp-cluster --addon-name coredns --region us-east-1
+
+# Kubeconfig
+aws eks update-kubeconfig --name groupsapp-cluster --region us-east-1
+
+# Deploy
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/secret.yaml        # crear desde k8s/secret.yaml.template
+kubectl apply -f k8s/redis.yaml
+kubectl apply -f k8s/rabbitmq.yaml
+kubectl apply -f k8s/backend.yaml
+kubectl apply -f k8s/frontend.yaml
+kubectl apply -f k8s/ingress.yaml
+
+# Exponer y escalar
+kubectl patch service frontend -n groupsapp -p '{"spec":{"type":"LoadBalancer"}}'
+kubectl patch service backend  -n groupsapp -p '{"spec":{"type":"LoadBalancer"}}'
+kubectl scale deployment/backend --replicas=2 -n groupsapp
+```
+
+> `k8s/secret.yaml` no esta en el repositorio. Crear a partir de `k8s/secret.yaml.template` con los valores en base64.
 
 ---
 
@@ -123,7 +258,6 @@ S3_BUCKET_NAME=tu-bucket
 
 PORT=3000
 NODE_ENV=production
-LOG_LEVEL=info
 CORS_ORIGINS=http://localhost
 
 MESSAGES_SERVICE_ADDR=messages-service:50051
@@ -139,218 +273,26 @@ ETCD_HOSTS=http://etcd:2379
 
 ```bash
 docker compose up -d --build
-```
-
-### Migraciones
-
-```bash
 docker compose exec backend node migrations/run.js
 ```
 
-### URLs locales
-
-| Servicio | URL |
+| Servicio | URL local |
 |---|---|
 | App | http://localhost |
 | RabbitMQ UI | http://localhost:15672 (groupsapp / groupsapp123) |
-| Backend metrics | http://localhost:3000/metrics |
-
----
-
-## Despliegue en AWS EKS
-
-### Pre-requisitos
-
-- AWS CLI configurado con credenciales de sesion
-- kubectl + eksctl instalados
-- Docker con acceso a ECR
-
-### Cluster
-
-Definido en `eks-cluster.yaml`: 2 nodos `t3.medium`, region `us-east-1`, auto-scaling hasta 4 nodos.
-
-### Pasos de despliegue
-
-```bash
-# 1. Crear cluster
-eksctl create cluster -f eks-cluster.yaml
-
-# 2. Instalar addons de red
-aws eks create-addon --cluster-name groupsapp-cluster --addon-name vpc-cni --region us-east-1
-aws eks create-addon --cluster-name groupsapp-cluster --addon-name kube-proxy --region us-east-1
-aws eks create-addon --cluster-name groupsapp-cluster --addon-name coredns --region us-east-1
-
-# 3. Kubeconfig
-aws eks update-kubeconfig --name groupsapp-cluster --region us-east-1
-
-# 4. Login ECR
-aws ecr get-login-password --region us-east-1 | \
-  docker login --username AWS --password-stdin <account>.dkr.ecr.us-east-1.amazonaws.com
-
-# 5. Deploy manifests
-kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/secret.yaml
-kubectl apply -f k8s/redis.yaml
-kubectl apply -f k8s/rabbitmq.yaml
-kubectl apply -f k8s/backend.yaml
-kubectl apply -f k8s/frontend.yaml
-kubectl apply -f k8s/ingress.yaml
-
-# 6. Exponer servicios
-kubectl patch service frontend -n groupsapp -p '{"spec":{"type":"LoadBalancer"}}'
-kubectl patch service backend -n groupsapp -p '{"spec":{"type":"LoadBalancer"}}'
-
-# 7. Alta disponibilidad backend
-kubectl scale deployment/backend --replicas=2 -n groupsapp
-```
-
-### Actualizacion de secrets AWS
-
-Las credenciales de AWS Academy expiran cada sesion. Actualizar `k8s/secret.yaml` con los valores en base64:
-
-```bash
-echo -n "ASIA..." | base64   # AWS_ACCESS_KEY_ID
-echo -n "..." | base64       # AWS_SECRET_ACCESS_KEY
-echo -n "..." | base64       # AWS_SESSION_TOKEN
-```
-
----
-
-## API REST
-
-Prefijo `/api/`. Autenticacion con `Authorization: Bearer <token>`.
-
-Formato de respuesta:
-```json
-{ "success": true, "data": { ... } }
-{ "success": false, "error": "mensaje de error" }
-```
-
-### Autenticacion
-
-| Metodo | Endpoint | Auth | Descripcion |
-|---|---|---|---|
-| POST | `/api/auth/register` | No | Registro |
-| POST | `/api/auth/login` | No | Login, retorna JWT |
-| GET | `/api/auth/me` | Si | Perfil actual |
-
-### Grupos
-
-| Metodo | Endpoint | Auth | Descripcion |
-|---|---|---|---|
-| GET | `/api/groups` | Si | Mis grupos |
-| POST | `/api/groups` | Si | Crear grupo |
-| GET | `/api/groups/:id` | Si | Detalle de grupo |
-| DELETE | `/api/groups/:id` | Si | Eliminar grupo (admin) |
-| POST | `/api/groups/:id/members` | Si | Agregar miembro |
-| DELETE | `/api/groups/:id/members/:userId` | Si | Remover miembro |
-
-### Canales
-
-| Metodo | Endpoint | Auth | Descripcion |
-|---|---|---|---|
-| GET | `/api/groups/:id/channels` | Si | Canales del grupo |
-| POST | `/api/groups/:id/channels` | Si | Crear canal |
-| DELETE | `/api/groups/:id/channels/:channelId` | Si | Eliminar canal |
-
-### Mensajes
-
-| Metodo | Endpoint | Auth | Descripcion |
-|---|---|---|---|
-| GET | `/api/messages/group/:id` | Si | Mensajes de grupo/canal |
-| GET | `/api/messages/direct/:userId` | Si | DM con usuario |
-| DELETE | `/api/messages/:id` | Si | Eliminar mensaje propio |
-
-### Contactos
-
-| Metodo | Endpoint | Auth | Descripcion |
-|---|---|---|---|
-| GET | `/api/contacts` | Si | Mis contactos |
-| POST | `/api/contacts` | Si | Agregar contacto |
-| DELETE | `/api/contacts/:id` | Si | Eliminar contacto |
-
-### Archivos
-
-| Metodo | Endpoint | Auth | Descripcion |
-|---|---|---|---|
-| POST | `/api/files/upload` | Si | Subir archivo a S3 |
-| GET | `/api/files/signed-url/*` | Si | URL firmada S3 |
-
-### Sistema
-
-| Metodo | Endpoint | Descripcion |
-|---|---|---|
-| GET | `/api/health` | Healthcheck |
-| GET | `/metrics` | Metricas Prometheus |
-
----
-
-## WebSocket (Socket.IO)
-
-Conexion con token JWT:
-
-```js
-const socket = io(BACKEND_URL, { auth: { token } })
-```
-
-### Eventos cliente -> servidor
-
-| Evento | Payload | Descripcion |
-|---|---|---|
-| `join_group` | `{ groupId }` | Unirse a sala de grupo |
-| `join_channel` | `{ channelId }` | Unirse a sala de canal |
-| `send_message` | `{ groupId, channelId, content, type }` | Enviar mensaje grupal |
-| `send_direct` | `{ receiverId, content, type }` | Enviar DM |
-| `typing` | `{ groupId, channelId }` | Indicador de escritura |
-
-### Eventos servidor -> cliente
-
-| Evento | Descripcion |
-|---|---|
-| `new_message` | Nuevo mensaje en grupo/canal |
-| `new_direct_message` | Nuevo DM recibido |
-| `user_online` | Usuario se conecta |
-| `user_offline` | Usuario se desconecta |
-| `typing` | Alguien esta escribiendo |
-
----
-
-## gRPC Services
-
-Definiciones en `proto/messages.proto` y `proto/groups.proto`.
-
-### MessagesService (:50051)
-
-- `SaveMessage(MessageRequest)` - persiste mensaje
-- `GetMessages(GetMessagesRequest)` - historial grupal
-- `GetDirectMessages(GetDirectRequest)` - historial DM
-
-### GroupsService (:50052)
-
-- `GetGroup(GroupRequest)` - detalles de grupo
-- `GetMembers(GroupRequest)` - miembros del grupo
-- `AddMember(AddMemberRequest)` - agregar miembro
-- `GetChannels(GroupRequest)` - canales del grupo
-
----
-
-## Eventos RabbitMQ
-
-- Exchange: `groupsapp.events` (tipo `topic`)
-- Routing key `message.sent`: backend publica al recibir mensaje via Socket.IO; messages-service consume para persistir en DB
+| Metricas | http://localhost:3000/metrics |
 
 ---
 
 ## Tests
 
 ```bash
-cd backend && npm test
+cd backend          && npm test
 cd messages-service && npm test
-cd groups-service && npm test
+cd groups-service   && npm test
 ```
 
-Cobertura: autenticacion, upload de archivos, grupos CRUD, mensajes, contactos.
+Cobertura: autenticacion, grupos CRUD, canales, mensajes, contactos, upload S3.
 
 ---
 
@@ -360,21 +302,22 @@ Cobertura: autenticacion, upload de archivos, grupos CRUD, mensajes, contactos.
 GroupsApp/
 ├── backend/
 │   ├── src/
-│   │   ├── config/         # db.js, redis.js, s3.js
-│   │   ├── middleware/     # auth.js, upload.js
-│   │   ├── routes/         # auth, groups, channels, messages, contacts, files
-│   │   └── socket/         # chat.js, presence.js
+│   │   ├── config/       # db.js, redis.js, s3.js
+│   │   ├── middleware/   # auth.js, upload.js
+│   │   ├── routes/       # auth, groups, channels, messages, contacts, files
+│   │   ├── socket/       # chat.js, presence.js
+│   │   └── grpc/         # clients.js
 │   └── migrations/
 ├── frontend/
 │   └── src/
-│       ├── components/     # chat/, groups/, layout/, ui/
-│       ├── pages/          # Login, Register, Chat
-│       ├── context/        # AuthContext, SocketContext
-│       └── services/       # api.js
+│       ├── components/   # chat/, groups/, layout/, ui/
+│       ├── pages/        # Login, Register, Chat
+│       ├── context/      # AuthContext, SocketContext
+│       └── services/     # api.js
 ├── messages-service/
 ├── groups-service/
-├── proto/                  # messages.proto, groups.proto
-├── k8s/                    # manifests EKS
+├── imagenes/             # capturas del proyecto
+├── k8s/                  # manifests EKS
 ├── docker-compose.yml
 └── eks-cluster.yaml
 ```
@@ -383,8 +326,8 @@ GroupsApp/
 
 ## Entregables
 
-| Entregable | Archivo / URL |
+| Entregable | Detalle |
 |---|---|
-| Informe tecnico | `InformeTecnico.md` |
-| Aplicacion desplegada | URL del LoadBalancer EKS (ver equipo) |
-| Video demo | (por entregar) |
+| Informe tecnico | `InformeTecnico.pdf` |
+| Aplicacion desplegada | AWS EKS (URL disponible en entrega) |
+| Video demo | Por entregar |
