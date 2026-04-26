@@ -112,9 +112,9 @@ Crear `.env` en la raiz:
 ```env
 DB_HOST=localhost
 DB_PORT=3306
-DB_USER=groupsapp
-DB_PASSWORD=groupsapp123
-DB_NAME=groupsapp
+DB_USER=tuuser
+DB_PASSWORD=tupassword
+DB_NAME=tudbname
 
 JWT_SECRET=cambia-esto-en-produccion
 
