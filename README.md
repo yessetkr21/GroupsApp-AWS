@@ -190,14 +190,6 @@ cd groups-service && npm test
 
 ---
 
-## Uso de IA
-
-Siguiendo el código de ética del curso, se declara el uso de Claude (Anthropic) para:
-- Generación inicial de boilerplate (Dockerfile, docker-compose, estructura de rutas Express)
-- Depuración de errores de infraestructura AWS (IAM, IMDS, RDS subnet groups)
-- Consultas puntuales sobre sintaxis de AWS CLI y configuración de Prometheus
-- Generación de tests unitarios con Jest + Supertest
-
 El núcleo de aprendizaje (diseño de microservicios, protocolos de comunicación REST/gRPC/MOM, esquema de datos distribuidos, coordinación etcd) fue implementado por el equipo.
 
 ---
