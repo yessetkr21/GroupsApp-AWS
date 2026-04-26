@@ -6,4 +6,5 @@ node_modules/
 *.tar.gz
 *.zip
 logs/
-k8s/secret.yaml
+k8s/
+proto/
