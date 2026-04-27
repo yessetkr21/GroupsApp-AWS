@@ -323,11 +323,3 @@ GroupsApp/
 ```
 
 ---
-
-## Entregables
-
-| Entregable | Detalle |
-|---|---|
-| Informe tecnico | `InformeTecnico.pdf` |
-| Aplicacion desplegada | AWS EKS (URL disponible en entrega) |
-| Video demo | Por entregar |
